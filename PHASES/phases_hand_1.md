@@ -116,14 +116,15 @@ This phase establishes both the board backend and its temporary presentation. Th
 
 Implement the initial player drop-selection rules: two disabled deployment lines and the selection of one valid starting building.
 
-The battlefield contains 16 deployment lines: eight rows and eight columns. Two different lines are randomly disabled at the start of deployment.
+The battlefield contains 16 deployment lines: eight rows and eight columns. Two line selections are rolled independently at the start of deployment, and both rolls may select the same line.
 
 ## Required Work
 
 ### Deployment-Line Logic
 
 - Represent all eight row lines and eight column lines.
-- Randomly choose exactly two different lines for disabling.
+- Perform exactly two independent random line selections for disabling.
+- Allow both selections to resolve to the same row or column.
 - Treat a building as unavailable for deployment when it belongs to either disabled line.
 - Keep the disabled state limited to deployment; the affected buildings remain normal playable buildings once the match begins.
 - Allow the deployment state to be regenerated for repeated testing.
@@ -158,7 +159,7 @@ If two, three, or four teams eventually choose the same starting building, a hot
 
 ## Exit Conditions
 
-- Every deployment generates exactly two different disabled lines from the set of 16.
+- Every deployment performs exactly two valid line selections from the set of 16, with duplicate results allowed.
 - Buildings belonging to either disabled line cannot be selected for deployment.
 - Valid buildings remain selectable.
 - The player can select, change, and confirm one valid starting building.

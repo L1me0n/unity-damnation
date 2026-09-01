@@ -14,8 +14,13 @@ public class BattlefieldGenerator : MonoBehaviour
     private float startX => -(battlefieldWidth / 2f - 0.5f);
     private float startY => -(battlefieldHeight / 2f - 0.5f);
 
-    private readonly Dictionary<BuildingNode, GameObject> NodeToGameObject 
-        = new Dictionary<BuildingNode, GameObject>();
+    private readonly Dictionary<BuildingNode, BuildingNodePreview> nodes 
+        = new Dictionary<BuildingNode, BuildingNodePreview>();
+
+    public IReadOnlyDictionary<BuildingNode, BuildingNodePreview> Nodes => nodes;
+
+    public int Width => battlefieldWidth;
+    public int Height => battlefieldHeight;
 
     private void Awake()
     {
@@ -43,7 +48,7 @@ public class BattlefieldGenerator : MonoBehaviour
 
                 BuildingNode node = new BuildingNode
                 (
-                    NodeToGameObject.Count,
+                    nodes.Count,
                     i,
                     j
                 );
@@ -54,7 +59,7 @@ public class BattlefieldGenerator : MonoBehaviour
                     nodePreview.Initialize(node);
                 }
 
-                NodeToGameObject.Add(node, nodeObject);
+                nodes.Add(node, nodePreview);
             }
         }
     }

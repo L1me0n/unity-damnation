@@ -3,6 +3,13 @@ public class BuildingNode
     private int nodeID;
     private int row;
     private int column;
+    private bool isDeploymentBlocked;
+
+    public int NodeID => nodeID;
+    public int Row => row;
+    public int Column => column;
+
+    public bool IsDeploymentBlocked => isDeploymentBlocked;
 
     public BuildingNode(int nodeID, int row, int column)
     {
@@ -11,7 +18,13 @@ public class BuildingNode
         this.column = column;
     }
 
-    public int NodeID => nodeID;
-    public int Row => row;
-    public int Column => column;
+    public void BlockDeployment()
+    {
+        isDeploymentBlocked = true;
+    }
+
+    public void UnblockDeployment()
+    {
+        isDeploymentBlocked = false;
+    }
 }

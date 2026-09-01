@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7705841595008216011}
   - component: {fileID: 1838430984761006852}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Tile
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -101,7 +101,8 @@ GameObject:
   m_Component:
   - component: {fileID: 4428495605967232192}
   - component: {fileID: 3686133373356696482}
-  m_Layer: 0
+  - component: {fileID: 7716233442162303027}
+  m_Layer: 3
   m_Name: BuildingNode
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -137,6 +138,52 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 240edf2c100ab0847b864845391421c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BuildingNodePreview
+--- !u!61 &7716233442162303027
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6169278489094665740}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 1, y: 1}
+  m_EdgeRadius: 0
 --- !u!1 &7159488510149694703
 GameObject:
   m_ObjectHideFlags: 0
@@ -147,7 +194,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1800867306897539205}
   - component: {fileID: 917845165699591108}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Outline
   m_TagString: Untagged
   m_Icon: {fileID: 0}

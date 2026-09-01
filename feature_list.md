@@ -66,3 +66,71 @@ Damnation now opens on a complete 64-node battlefield that can be inspected thro
 Phase 1 Verdict:
 
 **Locked.** ✅ - 08.25.26
+
+---
+
+### Phase 2 Recap: Deployment-Line Rules and Starting-Node Selection
+
+Goal:
+
+Implement the first deployment interaction for Damnation: roll two unavailable battlefield lines, prevent deployment on their nodes, allow the player to choose a valid starting node, and confirm that choice through reusable UI.
+
+Scripts Created / Edited:
+
+- DeploymentSelection.cs
+- NodeInteraction.cs
+- BuildingNode.cs
+- BuildingNodePreview.cs
+- ConfirmationMenu.cs
+- Notification.cs
+- NotificationManager.cs
+- BattlefieldGenerator.cs
+
+Implemented:
+
+- Added DeploymentSelection as the controller for the player deployment sequence.
+- Deployment begins once and is protected from duplicate initialization through a deploymentStarted state.
+- Added two independent random deployment-line rolls.
+- Each roll first chooses between row and column and then selects a valid index for that line type.
+- Both rolls are intentionally allowed to select the same line.
+- DeploymentSelection evaluates the generated battlefield data and identifies every node belonging to either rolled line.
+- Added deployment-blocked state to BuildingNode through BlockDeployment and UnblockDeployment operations.
+- Blocked deployment nodes receive a distinct dark visual state through BuildingNodePreview.
+- Blocked nodes remain interactive so tapping one can explain why it cannot be selected.
+- Added NodeInteraction as the bridge between the mobile tap event and battlefield-node interaction.
+- NodeInteraction converts the screen-space tap position into world space and uses a node LayerMask with Physics2D.OverlapPoint to identify the tapped tile.
+- The tapped BuildingNodePreview is published through OnNodeTapped instead of placing deployment rules inside the input reader.
+- DeploymentSelection rejects blocked nodes and publishes OnDeploymentBlocked when one is tapped.
+- Valid nodes can be selected and receive a distinct highlighted visual state.
+- Added a reusable ConfirmationMenu with configurable text and confirm/cancel callbacks.
+- Cancelling selection restores the node's normal visual state and allows another node to be selected.
+- Confirming selection stores the chosen BuildingNode as stable board data rather than storing only its visual GameObject.
+- Confirmation clears the deployment-only blocked states and visual treatment so those nodes remain normal playable buildings after deployment.
+- Confirmation-menu button listeners are removed after each decision so callbacks do not accumulate between uses.
+- Added a reusable notification prefab controlled through Notification.
+- Notifications use a CanvasGroup coroutine to fade in, remain visible, fade out, and report completion through OnNotificationFinished.
+- Reusing a notification stops its previous coroutine and resets its text and alpha before starting a new lifetime.
+- Added NotificationManager to subscribe to deployment-blocked events and display the corresponding player message.
+- NotificationManager limits the display to three notification objects.
+- Available notification objects are stored in a Queue for reuse instead of being repeatedly instantiated and destroyed.
+- Active notifications are stored in an ordered List so the oldest notification can be found while any specific completed notification can be removed safely.
+- When the three-notification limit is exceeded, the oldest active notification is immediately reused for the newest message.
+- Reused notifications are moved to the first sibling position so the Vertical Layout Group presents them in the intended newest-first order.
+- Completed notifications become transparent and return to the available pool while retaining their reserved layout space.
+- The complete disabled-line, blocked-tap notification, valid selection, cancellation, confirmation, overflow, fade, and pooling flow was tested successfully.
+
+Important Technical Note:
+
+Phase 2 keeps input recognition, physical node detection, deployment rules, node state, presentation, confirmation UI, and notification lifetime in separate components. MobileInputReader continues to publish a generic tap position; NodeInteraction determines which visual node was tapped; DeploymentSelection decides whether the connected BuildingNode is legal; and the UI components only present the resulting request or warning. The notification system also separates active-object tracking from the available-object pool: the active List supports removal by exact object identity, while the available Queue only needs first-in/first-out reuse. Unity sibling order is updated separately because logical notification order does not automatically change the order used by a Vertical Layout Group.
+
+Scope Note:
+
+This phase only implements the player's initial deployment-line restrictions and confirmed starting-node choice. The two line rolls may produce the same line by design. Player-unit spawning, AI deployment, revealing other teams, hot-drop detection, combat, and normal movement turns are deferred to later phases. The current confirmation and notification visuals remain reusable development UI rather than final presentation art.
+
+Result:
+
+Damnation can now begin a deployment sequence, independently roll two unavailable rows or columns, communicate those restrictions visually, and reject blocked selections with pooled corner notifications. The player can select a valid node, cancel and choose again, or confirm it through a reusable confirmation panel. The resulting BuildingNode is preserved for Phase 3, while all deployment-only restrictions are removed from the battlefield after confirmation.
+
+Phase 2 Verdict:
+
+**Locked.** ✅ - 09.01.26
