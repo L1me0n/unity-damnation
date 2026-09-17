@@ -171,6 +171,8 @@ public class DeploymentSelection : MonoBehaviour
         selectedNode = null;
 
         deploymentStarted = false;
+
+        FinishDeployment();
     }
 
     private void CancelSelection()
@@ -204,5 +206,12 @@ public class DeploymentSelection : MonoBehaviour
     {
         BuildingNodePreview nodePreview = battlefieldGenerator.Nodes[node];
         nodePreview.ResetColor();
+    }
+
+    private void FinishDeployment()
+    {
+        BuildingNodePreview nodePreview = battlefieldGenerator.Nodes[confirmedNode];
+        nodePreview.ResetColor();
+        nodePreview.SpawnUnits(0); // player team is 0
     }
 }

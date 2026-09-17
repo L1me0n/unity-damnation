@@ -134,3 +134,156 @@ Damnation can now begin a deployment sequence, independently roll two unavailabl
 Phase 2 Verdict:
 
 **Locked.** ✅ - 09.01.26
+
+---
+
+### Phase 3 Recap: Unit Foundation and Movement Orders
+
+Goal:
+
+Create the six player units, implement mobile group and individual unit selection, allow adjacent movement orders to be previewed and edited, and resolve the first player-only simultaneous movement turn.
+
+Scripts Created / Edited:
+
+* DeploymentSelection.cs
+* BattlefieldGenerator.cs
+* BuildingNodePreview.cs
+* MatchManager.cs
+* UnitManager.cs
+* UnitCard.cs
+* VerticalSwipeReader.cs
+* CommandMenu.cs
+* DecisionManager.cs
+* DecisionMenu.cs
+* TurnManager.cs
+
+Implemented:
+
+* Added six distinct player units that spawn on the starting building confirmed during Phase 2.
+* Added MatchManager as the central registry for created units.
+* Every registered unit receives:
+
+  * A stable unique unit ID
+  * A team ID
+* Added UnitManager as the authoritative runtime component for each unit.
+* Each unit stores:
+
+  * Unit name
+  * Unit ID
+  * Team ID
+  * Alive state
+  * Current building
+  * Previous building
+  * Planned target building
+  * Current and maximum Resistance
+  * Current and maximum Strength
+  * Current and maximum Agility
+  * Current and maximum Intelligence
+* Added clamped operations for changing Resistance, Strength, Agility, and Intelligence without exceeding their valid ranges.
+* Added Agility as an additional unit stat for later combat turn-order logic.
+* Added team-colour presentation for unit heads and bodies.
+* Added separate Unit Slots and Preview Slots to every battlefield node.
+* BuildingNodePreview separately tracks:
+
+  * Units currently occupying the node
+  * Units previewed as moving toward the node
+  * Whether the node is occupied
+  * Whether the node contains movement previews
+  * Which team currently occupies it
+  * Whether it is the original node of an active command
+* Node occupant queries are encapsulated through BuildingNodePreview rather than exposing the slot hierarchy to the menus.
+* Added a two-dimensional battlefield-node collection indexed directly by row and column.
+* Added BattlefieldGenerator.GetNode to retrieve a BuildingNode through its board coordinates.
+* Added UnitCard as a reusable visual representation of one unit inside selection menus.
+* Unit cards display:
+
+  * Unit name
+  * Team-coloured icon
+  * Resistance
+  * Agility
+  * Strength
+  * Intelligence
+  * Selected or unselected background state
+* Added CommandMenu for selecting units from a friendly occupied node.
+* CommandMenu opens only when a player-controlled occupied node is tapped.
+* Between one and six active unit cards are populated from the units occupying that node.
+* Every displayed unit begins selected.
+* Individual cards can be tapped to include or exclude units from the command.
+* Hidden card slots are ignored so stale units cannot enter later selections.
+* Confirmed selections are cleared and rebuilt for every command.
+* Empty unit selections cannot be confirmed.
+* Card event subscriptions are removed whenever the menu closes.
+* Added VerticalSwipeReader as a reusable UI gesture component.
+* The swipe reader:
+
+  * Tracks one active pointer
+  * Moves the panel vertically with the pointer
+  * Converts screen-pixel movement through the Canvas scale factor
+  * Limits maximum panel travel
+  * Rejects horizontally dominant gestures
+  * Uses a panel-height percentage as its confirmation threshold
+  * Resets the panel before publishing an event
+  * Recovers safely if the panel is disabled during a drag
+* Swiping CommandMenu upward confirms the selected unit group.
+* Swiping CommandMenu downward closes it without creating a command.
+* Added DecisionManager to control destination selection after CommandMenu confirmation.
+* DecisionManager copies the confirmed unit group into its own active selection.
+* Orthogonally adjacent nodes are found through their row and column coordinates.
+* Board-edge checks prevent coordinates outside the battlefield from being requested.
+* Legal adjacent destinations are highlighted green.
+* Only highlighted adjacent nodes can receive the active movement decision.
+* A red cross allows the active destination-selection attempt to be cancelled.
+* Cancelling destination selection restores neighbour colours and clears the active decision state.
+* Confirming a destination assigns that BuildingNode as the selected units' planned target.
+* Neighbour collections, selected-unit collections, highlights, and the red-cross state are reset after every completed or cancelled decision.
+* Assigning a movement order does not immediately change the unit's authoritative current building.
+* The ordered unit is temporarily removed from the source node's commandable occupant collection.
+* Its source representation becomes white to communicate that it has already received an order.
+* A separate ghost representation appears in the corresponding Preview Slot on the target node.
+* Target nodes retain references to the units represented by their ghosts.
+* Added DecisionMenu for inspecting and editing units ordered toward a previewed target node.
+* DecisionMenu displays the units whose planned target is the tapped node.
+* Units remain selected by default, representing orders that will be kept.
+* Deselecting a card marks that unit's order for cancellation.
+* Swiping upward applies the cancellations to the deselected units.
+* Swiping downward closes DecisionMenu without applying its temporary card changes.
+* Cancelling a unit's order:
+
+  * Clears its target building
+  * Removes its target ghost
+  * Returns it to its original node's occupant collection and visual slots
+  * Restores its team colour
+* Added TurnManager as the initial turn-resolution spine.
+* Ending the turn advances the turn counter and publishes the turn-ended event.
+* Every UnitManager subscribes to the turn-ended event.
+* Units without movement orders remain at their current buildings.
+* Units with movement orders:
+
+  * Remove their target ghosts
+  * Move their actual visual objects into the destination Unit Slots
+  * Store their old current building as their previous building
+  * Promote the planned target to their current building
+  * Clear the resolved target reference
+* Original-node command markers are cleared during turn resolution so they do not persist into later turns.
+* All player movement orders are planned before the turn ends and resolve from the same turn-ended signal.
+* The complete spawning, card selection, swipe confirmation, adjacent highlighting, ghost preview, order cancellation, red-cross cancellation, and turn-resolution flow was tested successfully.
+
+Important Technical Note:
+
+Phase 3 maintains a distinction between actual unit location and planned movement. UnitManager.currentNode remains the authoritative location throughout planning, while targetNode stores the proposed destination and BuildingNodePreview presents that proposal through separate Preview Slots and preview-unit collections. The actual unit only changes buildings when TurnManager publishes the turn-ended event. CommandMenu handles source-unit selection, DecisionManager handles legal destination selection, and DecisionMenu handles editing orders already represented on target nodes. This prevents UI selection and ghost visuals from becoming the authoritative gameplay state.
+
+Scope Note:
+
+This phase implements the first player-only movement loop. AI teams, hidden information, building ownership, capture, encounters, combat, hot-drops, retreat, regeneration, zone damage, permanent progression, and final presentation remain deferred. The current slot-pointer implementation is accepted for the tested Phase 3 command flow. Validation that prevents unsupported future `MoveUnitHere` call patterns, generalized slot compaction, and more complex occupied-destination behavior will be added when those movement and encounter cases enter the playthrough. The current unit, ghost, card, and menu visuals remain functional development placeholders.
+
+Result:
+
+Damnation now supports a complete player movement turn. Six registered units spawn at the confirmed deployment node, can be selected together or divided into subsets through a mobile swipe menu, can receive legal adjacent movement orders, and display those orders as target-node ghosts without prematurely changing their actual locations. Planned orders can be inspected and cancelled before the turn ends, while turn confirmation resolves the remaining orders, updates unit locations, removes their previews, clears temporary decision state, and prepares the battlefield for the next planning turn.
+
+Phase 3 Verdict:
+
+**Locked.** ✅ - 09.17.26
+
+---
+
+

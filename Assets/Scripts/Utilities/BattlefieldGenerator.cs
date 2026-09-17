@@ -17,6 +17,9 @@ public class BattlefieldGenerator : MonoBehaviour
     private readonly Dictionary<BuildingNode, BuildingNodePreview> nodes 
         = new Dictionary<BuildingNode, BuildingNodePreview>();
 
+    private List<List<BuildingNode>> allNodes
+        = new List<List<BuildingNode>>();
+
     public IReadOnlyDictionary<BuildingNode, BuildingNodePreview> Nodes => nodes;
 
     public int Width => battlefieldWidth;
@@ -37,6 +40,7 @@ public class BattlefieldGenerator : MonoBehaviour
     {
         for (int i = 0; i < battlefieldHeight; i++)
         {
+            List<BuildingNode> iList = new List<BuildingNode>();
             for (int j = 0; j < battlefieldWidth; j++)
             {
                 float spawnY = startY + i;
@@ -60,7 +64,15 @@ public class BattlefieldGenerator : MonoBehaviour
                 }
 
                 nodes.Add(node, nodePreview);
+                iList.Add(node);
             }
+            allNodes.Add(iList);
         }
+    }
+
+    public BuildingNode GetNode(int row, int column)
+    {
+        //row = Mathf.Abs(row - battlefieldHeight + 1);
+        return allNodes[row][column];
     }
 }
