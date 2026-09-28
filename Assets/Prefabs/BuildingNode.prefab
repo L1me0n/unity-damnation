@@ -257,6 +257,7 @@ GameObject:
   - component: {fileID: 4428495605967232192}
   - component: {fileID: 3686133373356696482}
   - component: {fileID: 7716233442162303027}
+  - component: {fileID: 6867537411833351261}
   m_Layer: 3
   m_Name: BuildingNode
   m_TagString: Untagged
@@ -322,6 +323,13 @@ MonoBehaviour:
   - {fileID: 3315563578922181206}
   - {fileID: 1143597017344487250}
   - {fileID: 4216863640097132062}
+  occupyingUnits: []
+  previewUnits: []
+  isOccupied: 0
+  isPreviewed: 0
+  isOriginal: 0
+  previewPointer: -1
+  unitPointer: -1
 --- !u!61 &7716233442162303027
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -368,6 +376,19 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!114 &6867537411833351261
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6169278489094665740}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5930a609a53ee09458d4178d04004022, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NodeSafety
+  isSafe: 1
 --- !u!1 &6272174628040936518
 GameObject:
   m_ObjectHideFlags: 0

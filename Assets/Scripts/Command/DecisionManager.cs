@@ -20,12 +20,13 @@ public class DecisionManager : MonoBehaviour
 
     private bool isDeciding = false;
 
+    public bool IsDeciding => isDeciding;
+
     private void OnEnable()
     {
         commandMenu.OnSelectionConfirmed += StartDecision;
         nodeInteraction.OnNodeTapped += OnNodeTapped;
         decisionMenu.OnSelectionConfirmed += CancelDecision;
-
     }
 
     private void OnDisable()
@@ -106,18 +107,21 @@ public class DecisionManager : MonoBehaviour
 
     private void OnNodeTapped(BuildingNodePreview nodePreview)
     {
-        if (neighborsPreview.Contains(nodePreview) && isDeciding)
+        if (isDeciding)
         {
-            ConfirmDecision(nodePreview);
+            if (neighborsPreview.Contains(nodePreview))
+            {
+                ConfirmDecision(nodePreview);
+            }
+
+            return;
         }
+
+        decisionMenu.TryOpenDecisionMenu(nodePreview);
     }
 
     private void ConfirmDecision(BuildingNodePreview nodePreview)
     {
-        // TODO
-
-        isDeciding = false;
-
         foreach (BuildingNodePreview neighborPreview in neighborsPreview)
         {
             neighborPreview.ResetColor();
@@ -133,8 +137,6 @@ public class DecisionManager : MonoBehaviour
 
     public void StopDecision()
     {
-        isDeciding = false;
-
         foreach (BuildingNodePreview neighborPreview in neighborsPreview)
         {
             neighborPreview.ResetColor();
@@ -166,5 +168,7 @@ public class DecisionManager : MonoBehaviour
         neighborsPreview.Clear();
 
         decisionButton.gameObject.SetActive(false);
+
+        isDeciding = false;
     }
 }

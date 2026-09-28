@@ -286,4 +286,126 @@ Phase 3 Verdict:
 
 ---
 
+### Phases 4–5 Recap: Shrinking Zone and Match-State Presentation
 
+Goal:
+
+Implement Damnation's complete turn-driven shrinking-zone system and provide the player with clear visual feedback for turn progression, zone stages, impending shrinkage, unsafe battlefield nodes, and important match-state transitions.
+
+Scripts Created / Edited:
+
+* TurnManager.cs
+* TurnOrchestrator.cs
+* ZoneManager.cs
+* ZoneBuilder.cs
+* NodeSafety.cs
+* UnitManager.cs
+* MatchManager.cs
+* BuildingNodePreview.cs
+* HUDManager.cs
+* MessageMenu.cs
+* TapOrchestrator.cs
+* NodeInteraction.cs
+
+Implemented:
+
+* Expanded the turn system into an explicitly ordered turn-resolution pipeline.
+* Added TurnOrchestrator as the central coordinator for turn-end operations.
+* Every completed turn now resolves systems in the following order:
+
+  * Confirm planned unit movement
+  * Apply zone damage to units
+  * Advance the zone stage or shrinking process
+  * Refresh the HUD
+* This ordering ensures units first arrive at their authoritative destination, then receive damage according to that destination, before the zone advances and the player-facing HUD is updated.
+* Added ZoneManager as the gameplay controller for zone timing, stage progression, damage, countdowns, and shrinking state.
+* Added five successive zone stages.
+* New zone borders are generated when turns 1, 9, 16, 22, and 28 begin.
+* Zone shrinking begins on turns 5, 12, 18, 24, and 30.
+* Each shrinking sequence advances through four turn-based steps.
+* The five shrinking sequences therefore occur across:
+
+  * Turns 5–8
+  * Turns 12–15
+  * Turns 18–21
+  * Turns 24–27
+  * Turns 30–33
+* ZoneManager exposes the current zone stage, current shrinking state, stage countdown, shrinking countdown, shrinking-bar progress, and active zone damage.
+* Zone damage increases with the stage, beginning at one damage during Stage 1 and reaching five damage during Stage 5.
+* Final-stage countdown and fill calculations are handled separately so the last shrink can complete correctly despite there being no subsequent zone stage.
+* Added ZoneBuilder as the visual and physical constructor for the shrinking zone.
+* The zone uses four independently positioned border objects:
+
+  * Left border
+  * Right border
+  * Top border
+  * Bottom border
+* The damaging zone uses four corresponding coloured outer objects that grow inward from the battlefield edges.
+* ZoneBuilder stores an initial half-extent of 32 and successive target half-extents of 24, 20, 16, 12, and 8.
+* Each new target zone receives a randomized focus within its permitted range.
+* Every newly calculated boundary is clamped against the current boundary so the safe region can only become smaller and can never expand outward.
+* The four independently clamped boundaries allow the safe regions to remain nested without requiring every stage to form a perfect square.
+* At the beginning of each shrinking sequence, ZoneBuilder calculates the distance between every damaging edge and its corresponding target border.
+* Each distance is divided into four equal chunks.
+* On every shrinking turn, the damaging edge's position and scale advance by one chunk toward its target border.
+* Added NodeSafety to every battlefield node.
+* NodeSafety detects contact with colliders belonging to the damaging zone.
+* Once touched by the zone, a node permanently changes from safe to unsafe.
+* Permanent unsafe state is valid because the zone only contracts and never releases previously consumed territory.
+* Unsafe nodes receive a dark-red danger colour.
+* BuildingNodePreview stores the danger colour as the node's new base colour.
+* Temporary command, selection, and neighbour highlights can therefore still override an unsafe node, while ResetColor correctly returns it to red afterward.
+* Nodes are coloured according to the same collider interaction that determines gameplay damage, ensuring visual warnings and mechanical danger cannot disagree.
+* UnitManager checks the safety state of its authoritative current node during the zone-damage phase.
+* Units on unsafe nodes lose Resistance equal to the current zone damage.
+* Resistance remains clamped between zero and its maximum value.
+* Units reaching zero Resistance are marked dead before publishing their death event.
+* Dead units are removed from their node's occupant collection.
+* Nodes that lose their final occupant clear their occupied state and occupying-team value.
+* MatchManager removes dead units from the central registered-unit collection.
+* The dead unit's GameObject is destroyed after its gameplay state and registrations have been cleaned up.
+* Added continuous zone information to HUDManager.
+* The HUD now displays:
+
+  * Current turn
+  * Current zone stage
+  * Turns remaining before shrinking begins
+  * Turns remaining during active shrinking
+  * A fill bar representing progress through the current four-step shrink
+* The turn-confirmation button remains hidden during Turn 0 and becomes available once normal match turns begin.
+* HUD updates occur after zone processing so every displayed value represents the newly established turn state.
+* Added MessageMenu as a reusable blocking match-state panel.
+* MessageMenu uses one persistent panel rather than repeatedly instantiating and destroying message objects.
+* The panel remains visible until the player deliberately taps the screen.
+* MatchManager uses MessageMenu to announce the beginning of the battle and request the player's deployment location.
+* ZoneManager uses MessageMenu to announce:
+
+  * The beginning of each zone stage
+  * The number of turns before the next shrink
+  * The beginning of every shrinking sequence
+* Added TapOrchestrator between MobileInputReader and battlefield-node interaction.
+* TapOrchestrator distinguishes between mutually exclusive UI and battlefield tap ownership.
+* When a tap begins while MessageMenu is open, the orchestrator snapshots that state, publishes the UI-dismissal event, and immediately returns.
+* The same tap therefore cannot both close MessageMenu and interact with the battlefield behind it.
+* When no blocking message is open, the tap is forwarded to NodeInteraction for normal node detection.
+* NodeInteraction now receives permitted battlefield taps from TapOrchestrator instead of subscribing directly to the raw tap event.
+* This establishes the reusable rule that one physical tap receives one owner and performs one action.
+* The complete zone-stage, border-generation, four-step shrinking, collider-warning, escalating-damage, unit-death, HUD-countdown, stage-message, tap-dismissal, and input-blocking flow was tested successfully.
+
+Important Technical Note:
+
+Phases 4–5 introduce two different forms of orchestration. TurnOrchestrator represents an ordered pipeline in which every phase must run: movement resolves first, zone damage evaluates the resulting unit locations, the zone then advances, and the HUD finally reads the completed state. TapOrchestrator instead represents exclusive input routing: it snapshots whether blocking UI owns the tap, sends the tap to that owner, and returns before any lower-priority battlefield action can occur. In short, one turn executes every ordered phase, while one tap receives exactly one owner. This prevents both event-subscription order from changing turn results and a dismissed message from producing a Same-Tap Cascade on the node behind it.
+
+Scope Note:
+
+These phases implement the complete player-facing shrinking-zone loop for the current single-player-unit foundation. The generated safe areas are intentionally allowed to become nested axis-aligned rectangles rather than being forced into perfect squares. Because the zone only contracts, unsafe-node state is intentionally irreversible during a match. AI teams, fog of war, enemy deployment, hot-drops, encounters, combat rounds, retreat, building capture, regeneration, scoring, match completion, permanent nation progression, and sacrifice systems remain deferred to later phases. MessageMenu currently supports the match-state transitions required by the existing playthrough; queuing multiple simultaneous announcements can be added if future systems begin publishing several blocking messages during the same state change. Zone borders, danger overlays, HUD elements, and message-panel visuals remain functional development presentation rather than final art, animation, audio, or effects.
+
+Result:
+
+Damnation now contains a complete environmental-pressure loop. After deployment, the match enters Turn 1, displays the first future safe-zone boundary, counts down toward each shrink, advances four damaging edges inward over successive turns, warns the player exactly which nodes have become unsafe, and applies increasingly severe Resistance damage to units left outside the safe region. Units killed by the zone are removed cleanly from their nodes and the match registry. The HUD continuously communicates turn, stage, countdown, and shrinking progress, while blocking match-state messages announce battle start, new stages, and active shrinking without allowing their dismissal taps to affect the battlefield. The zone backend and its required player feedback now function as one complete tested system.
+
+Phases 4–5 Verdict:
+
+**Locked.** ✅ - 09.28.26
+
+---

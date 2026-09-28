@@ -1,10 +1,12 @@
 using UnityEngine;
+using System;
 
 public class UnitManager : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private BattlefieldGenerator battlefieldGenerator;
-    [SerializeField] private TurnManager turnManager;
+    [SerializeField] private TurnOrchestrator turnOrchestrator;
+    [SerializeField] private ZoneManager zoneManager;
 
     [Header("Unit Data")]
     [SerializeField] private int unitID;
@@ -19,7 +21,7 @@ public class UnitManager : MonoBehaviour
     [SerializeField] private BuildingNode targetNode;
 
     [Header("Unit Resistance")]
-    [SerializeField] private int maxResistance;
+    [SerializeField] private int maxResistance = 10;
     [SerializeField] private int currentResistance;
 
     [Header("Unit Strength")]
@@ -51,14 +53,18 @@ public class UnitManager : MonoBehaviour
     public int MaxIntelligence => maxIntelligence;
     public int CurrentIntelligence => currentIntelligence;
 
+    public event Action<UnitManager> OnDeath;
+
     private void OnEnable()
     {
-        turnManager.OnTurnEnded += ConfirmTarget;
+        turnOrchestrator.ConfirmTeamDecisions += ConfirmTarget;
+        turnOrchestrator.UnitZoneDamage += CheckNode;
     }
 
     private void OnDisable()
     {
-        turnManager.OnTurnEnded -= ConfirmTarget;
+        turnOrchestrator.ConfirmTeamDecisions -= ConfirmTarget;
+        turnOrchestrator.UnitZoneDamage -= CheckNode;
     }
 
     private void Awake()
@@ -68,16 +74,33 @@ public class UnitManager : MonoBehaviour
             battlefieldGenerator = FindObjectOfType<BattlefieldGenerator>();
         }
 
-        if (turnManager == null)
+        if (turnOrchestrator == null)
         {
-            turnManager = FindObjectOfType<TurnManager>();
+            turnOrchestrator = FindObjectOfType<TurnOrchestrator>();
         }
+
+        if (zoneManager == null)
+        {
+            zoneManager = FindObjectOfType<ZoneManager>();
+        }
+
+        currentResistance = maxResistance;
+        currentStrength = maxStrength;
+        currentAgility = maxAgility;
+        currentIntelligence = maxIntelligence;
 
         isAlive = true;
     }
 
-    public void SetCurrentResistance(int amount) => 
+    public void SetCurrentResistance(int amount)
+    {
         currentResistance = Mathf.Clamp(currentResistance + amount, 0, maxResistance);
+        if (currentResistance <= 0)
+        {
+            Die();
+        }
+    } 
+        
     public void SetCurrentStrength(int amount) => 
         currentStrength = Mathf.Clamp(currentStrength + amount, 0, maxStrength);
     public void SetCurrentAgility(int amount) => 
@@ -127,7 +150,7 @@ public class UnitManager : MonoBehaviour
         currentNodePreview.MoveUnitHere(this);
     }
 
-    public void ConfirmTarget()
+    public void ConfirmTarget(int turn)
     {
         BuildingNodePreview currentNodePreview = battlefieldGenerator.Nodes[currentNode];
 
@@ -146,5 +169,38 @@ public class UnitManager : MonoBehaviour
         previousNode = currentNode;
         currentNode = targetNode;
         targetNode = null;
+    }
+
+    private void CheckNode(int turn)
+    {
+        BuildingNodePreview currentNodePreview = battlefieldGenerator.Nodes[currentNode];
+
+        NodeSafety nodeSafety = currentNodePreview.gameObject.GetComponent<NodeSafety>();
+
+        if (!nodeSafety.IsSafe)
+        {
+            Debug.Log($"taking {zoneManager.ZoneDamage} damage");
+            SetCurrentResistance(-zoneManager.ZoneDamage);
+        }
+    }
+
+    private void Die()
+    {
+        if (!isAlive)
+        {
+            return;
+        }
+        
+        isAlive = false;
+
+        BuildingNodePreview currentNodePreview = battlefieldGenerator.Nodes[currentNode];
+
+        Debug.Log("Unit is dead");
+
+        currentNodePreview.RemoveUnit(this);
+
+        OnDeath?.Invoke(this);
+
+        Destroy(gameObject);
     }
 }

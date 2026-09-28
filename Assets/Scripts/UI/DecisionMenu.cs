@@ -6,8 +6,8 @@ public class DecisionMenu : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private VerticalSwipeReader verticalSwipeReader;
-    [SerializeField] private NodeInteraction nodeInteraction;
     [SerializeField] private GameObject decisionMenuPanel;
+    [SerializeField] private DecisionManager decisionManager;
     
     [Header("Slots")]
     [SerializeField] private List<Transform> unitCards = new List<Transform>();
@@ -26,16 +26,12 @@ public class DecisionMenu : MonoBehaviour
     {
         verticalSwipeReader.SwipeUpPerformed += OnSwipeUp;
         verticalSwipeReader.SwipeDownPerformed += OnSwipeDown;
-
-        nodeInteraction.OnNodeTapped += OnNodeTapped;
     }
 
     private void OnDisable()
     {
         verticalSwipeReader.SwipeUpPerformed -= OnSwipeUp;
         verticalSwipeReader.SwipeDownPerformed -= OnSwipeDown;
-
-        nodeInteraction.OnNodeTapped -= OnNodeTapped;
     }
 
     private void Awake()
@@ -45,9 +41,9 @@ public class DecisionMenu : MonoBehaviour
             verticalSwipeReader = FindObjectOfType<VerticalSwipeReader>();
         }
 
-        if (nodeInteraction == null)
+        if (decisionManager == null)
         {
-            nodeInteraction = FindObjectOfType<NodeInteraction>();
+            decisionManager = FindObjectOfType<DecisionManager>();
         }
 
         decisionMenuPanel.SetActive(false);
@@ -63,7 +59,7 @@ public class DecisionMenu : MonoBehaviour
         CloseDecisionMenu();
     }
 
-    private void OnNodeTapped(BuildingNodePreview nodePreview)
+    public void TryOpenDecisionMenu(BuildingNodePreview nodePreview)
     {
         if (nodePreview.IsPreviewed && !nodePreview.IsOccupied && !nodePreview.IsOriginal)
         {

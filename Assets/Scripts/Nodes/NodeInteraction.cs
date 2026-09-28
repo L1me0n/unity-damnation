@@ -4,7 +4,7 @@ using System;
 public class NodeInteraction : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private MobileInputReader mobileInputReader;
+    [SerializeField] private TapOrchestrator tapOrchestrator;
     [SerializeField] private LayerMask nodeLayerMask;
     [SerializeField] private Camera mainCamera;
 
@@ -12,19 +12,19 @@ public class NodeInteraction : MonoBehaviour
 
     private void OnEnable()
     {
-        mobileInputReader.TapPerformed += HandleTap;
+        tapOrchestrator.CheckNodeTap += HandleTap;
     }
 
     private void OnDisable()
     {
-        mobileInputReader.TapPerformed -= HandleTap;
+        tapOrchestrator.CheckNodeTap -= HandleTap;
     }
 
     private void Awake()
     {
-        if (mobileInputReader == null)
+        if (tapOrchestrator == null)
         {
-            mobileInputReader = FindObjectOfType<MobileInputReader>();
+            tapOrchestrator = FindObjectOfType<TapOrchestrator>();
         }
 
         if (mainCamera == null)

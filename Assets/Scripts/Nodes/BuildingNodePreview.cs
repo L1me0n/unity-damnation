@@ -30,8 +30,6 @@ public class BuildingNodePreview : MonoBehaviour
     private SpriteRenderer childSpriteRenderer;
     private Color originalColor;
 
-    
-
     public bool IsOccupied => isOccupied;
     public bool IsPreviewed => isPreviewed;
     public bool IsOriginal => isOriginal;
@@ -45,7 +43,6 @@ public class BuildingNodePreview : MonoBehaviour
         if (childTransform == null)
         {
             return;
-            
         }
 
         if (unitPrefab == null)
@@ -78,6 +75,12 @@ public class BuildingNodePreview : MonoBehaviour
     public void SetBlockedColor()
     {
         childSpriteRenderer.color = new Color(0.1383647f, 0.1009453f, 0.08223559f, 1f); 
+    }
+
+    public void SetDangerColor()
+    {
+        childSpriteRenderer.color = new Color(0.5f, 0f, 0f, 1f); 
+        originalColor = childSpriteRenderer.color;
     }
 
     public void HighlightColor()
@@ -203,11 +206,6 @@ public class BuildingNodePreview : MonoBehaviour
 
         GameObject unit = unitManager.Obj;
 
-        Transform slot = unitSlots[unitPointer];
-
-        Transform obj = slot.transform.GetChild(0);
-        UnitManager objUnitManager = obj.GetComponent<UnitManager>();
-
         SpriteRenderer unitHead = unit.transform.Find("Head").GetComponent<SpriteRenderer>();
         SpriteRenderer unitBody = unit.transform.Find("Body").GetComponent<SpriteRenderer>();
 
@@ -279,5 +277,23 @@ public class BuildingNodePreview : MonoBehaviour
     public void SetOriginal(bool original)
     {
         isOriginal = original;
+    }
+
+    public void RemoveUnit(UnitManager unit)
+    {
+        if (!occupyingUnits.Contains(unit))
+        {
+            return;
+        }
+
+        occupyingUnits.Remove(unit);
+
+        if (occupyingUnits.Count < 1)
+        {
+            isOccupied = false;
+            occupyingTeam = -1;
+        }
+
+        unitPointer--;
     }
 }
