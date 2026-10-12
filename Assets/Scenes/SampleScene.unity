@@ -2974,7 +2974,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0af8869f6436d5a44a4e651bb01ff081, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MatchManager
+  aiBrainPrefab: {fileID: 82269587245399552, guid: 735d75891e2dbd64f93337238e77e5ad, type: 3}
+  maxTeams: 4
   allUnits: []
+  aITeams: []
 --- !u!4 &423990792
 Transform:
   m_ObjectHideFlags: 0
@@ -10930,6 +10933,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1758922753}
   m_CullTransparentMesh: 1
+--- !u!1 &1784955087
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1784955088}
+  m_Layer: 0
+  m_Name: UnitsPool
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1784955088
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1784955087}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1000, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1793669628
 GameObject:
   m_ObjectHideFlags: 0
@@ -13429,7 +13463,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &2073646812
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14012,3 +14046,4 @@ SceneRoots:
   - {fileID: 304427575}
   - {fileID: 832110836}
   - {fileID: 1313551222}
+  - {fileID: 1784955088}

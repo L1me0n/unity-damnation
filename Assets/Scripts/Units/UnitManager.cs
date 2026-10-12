@@ -152,6 +152,11 @@ public class UnitManager : MonoBehaviour
 
     public void ConfirmTarget(int turn)
     {
+        if (teamID != 0)
+        {
+            return;
+        }
+
         BuildingNodePreview currentNodePreview = battlefieldGenerator.Nodes[currentNode];
 
         currentNodePreview.SetOriginal(false);
@@ -173,6 +178,11 @@ public class UnitManager : MonoBehaviour
 
     private void CheckNode(int turn)
     {
+        if (teamID != 0)
+        {
+            return;
+        }
+
         BuildingNodePreview currentNodePreview = battlefieldGenerator.Nodes[currentNode];
 
         NodeSafety nodeSafety = currentNodePreview.gameObject.GetComponent<NodeSafety>();

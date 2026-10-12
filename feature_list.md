@@ -409,3 +409,44 @@ Phases 4–5 Verdict:
 **Locked.** ✅ - 09.28.26
 
 ---
+
+### Phase 6 Recap: AI Teams Initialization
+
+Goal:
+
+Create the three AI teams and their unit rosters at match start, while preserving the existing player deployment and turn flow.
+
+Scripts Created / Edited:
+
+- MatchManager.cs
+- AITeam.cs
+- UnitManager.cs
+- DeploymentSelection.cs
+
+Implemented:
+
+- MatchManager creates three AI teams with team IDs 1, 2, and 3. The player remains team 0.
+- Each AITeam creates six UnitManager instances and keeps its own unit roster.
+- MatchManager registers all 18 AI units in its central unit collection and assigns each a unique unit ID and team ID.
+- MatchManager initializes every AI team before starting deployment. This ensures the teams receive the deployment-rule event.
+- Each AI team randomly selects a starting node outside the two blocked deployment lines.
+- MatchManager records each AI unit’s selected node and assigns it to the unit.
+- UnitManager subscribes and unsubscribes from turn events regardless of its initial team ID. Its current movement-confirmation and zone-damage handlers return for AI units, keeping those player-only operations from acting on AI units during this phase.
+
+Important Technical Note:
+
+AI units now have preliminary starting-node data, but they are not added to BuildingNodePreview’s occupant slots and do not yet participate in movement or zone damage. Phase 8 must connect AI deployment to the full battlefield state and establish one authoritative way to maintain unit locations as AI units begin moving.
+
+Scope Note:
+
+This phase establishes AI team identities, rosters, registration, and preliminary starting positions. Win conditions, points, complete AI deployment, information available to AI teams, movement decisions, and team separation remain deferred to Phases 7–10.
+
+Result:
+
+Damnation now initializes four team IDs and registers six units per team once the player deploys. The three AI teams are created before deployment rules are applied, while the existing player turn flow remains separate from unfinished AI behavior.
+
+Phase 6 Verdict:
+
+**Locked.** ✅ - 10.12.26
+
+---

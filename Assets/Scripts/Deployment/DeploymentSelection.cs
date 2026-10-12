@@ -28,6 +28,7 @@ public class DeploymentSelection : MonoBehaviour
     public BuildingNode ConfirmedNode => confirmedNode;
 
     public event Action OnDeploymentBlocked;
+    public event Action<List<BuildingNode>> OnRuleApplied;
 
     private void OnEnable()
     {
@@ -64,12 +65,7 @@ public class DeploymentSelection : MonoBehaviour
         width = battlefieldGenerator.Width;
         height = battlefieldGenerator.Height;
     }
-
-    private void Start()
-    {
-        BeginDeployment();
-    }
-
+    
     public void BeginDeployment()
     {
         if (deploymentStarted)
@@ -131,6 +127,8 @@ public class DeploymentSelection : MonoBehaviour
                 }
             }
         }
+
+        OnRuleApplied?.Invoke(blockedNodes);
     }
 
     private void SelectNode(BuildingNodePreview nodePreview)
