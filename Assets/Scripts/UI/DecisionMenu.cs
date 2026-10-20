@@ -61,7 +61,7 @@ public class DecisionMenu : MonoBehaviour
 
     public void TryOpenDecisionMenu(BuildingNodePreview nodePreview)
     {
-        if (nodePreview.IsPreviewed && !nodePreview.IsOccupied && !nodePreview.IsOriginal)
+        if (nodePreview.IsPreviewed && !(nodePreview.Node.OccupyingUnits.Count > 0) && !nodePreview.IsOriginal)
         {
             OpenDecisionMenu(nodePreview);
         }

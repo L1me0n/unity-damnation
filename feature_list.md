@@ -450,3 +450,51 @@ Phase 6 Verdict:
 **Locked.** ✅ - 10.12.26
 
 ---
+
+### Phase 7 Recap: Win Conditions and Points System
+
+Goal:
+
+Establish building ownership, territory points, elimination order, survival placement, and the score that determines the yearly winner.
+
+Scripts Created / Edited:
+
+- BuildingNode.cs
+- BuildingNodePreview.cs
+- OwnershipChecker.cs
+- MatchManager.cs
+- EncountersManager.cs
+- TurnOrchestrator.cs
+- HUDManager.cs
+- UnitManager.cs
+
+Implemented:
+
+- Building ownership is stored on the authoritative BuildingNode. An owned building remains owned when its units leave.
+- OwnershipChecker claims occupied buildings during the ownership step and recounts every team's owned buildings. Each owned building contributes one territory point; points are counted from current ownership rather than accumulated each turn.
+- The ownership toggle displays player-owned buildings and enemy-owned buildings included in the player's known-node list. Its flags are separate from ordinary movement and zone colours.
+- The current encounter pipeline registers attackers separately from a node's occupants. After the encounter resolves, MoveWinner removes losing units and places the winning attackers. CheckOwners then runs on the resulting occupancy.
+- MatchManager tracks living units per nation and assigns survival placements from fourth to first as nations are eliminated.
+- If the player is eliminated, the remaining AI nations are ranked by surviving-unit count. Equal counts are ordered randomly. If all AI nations are eliminated first, the player receives first survival placement.
+- Placement bonuses are 5, 2, 1, and 0 points for first through fourth. At match end, each nation's final score is its placement bonus plus the buildings it owns.
+- The highest final score determines the yearly winner, regardless of survival placement. The scoring logic also detects when two or more nations share the highest score and announces a tied year with no winner.
+- TurnOrchestrator stops later turn stages when the match becomes endable. It refreshes ownership, territory counts, and the HUD before requesting final scoring. Later orchestration calls return once the match has ended.
+- MatchManager guards final scoring against a repeated end call. A basic message announces the winner or a tie.
+
+Important Technical Note:
+
+CheckOwners uses the first occupant because the current movement and encounter pipeline keeps attackers pending outside the node's occupant list until an encounter has a winner. This assumption must be reviewed when Phase 8 integrates shared deployment buildings and hot drops. The known-node list is an initial visibility gate; timestamped ownership observations and rules for stale information belong to the later knowledge system.
+
+Scope Note:
+
+Encounter winners are temporary random outcomes while combat is deferred. Equal surviving-unit counts currently use Unity's random source; seeded replay remains future work. Phase 7 calculates scores and displays a basic winner-or-tie message, but does not yet retain a complete immutable yearly result, display a detailed four-nation results screen, or apply progression and sacrifices. In the agreed tie rule, nations tied for the highest final score will be exempt from sacrifice; that consequence will be implemented with the later year-management layer. Full AI deployment, AI zone-damage integration, and nation-specific information remain later work.
+
+Result:
+
+Damnation now has a working ownership and territory foundation, survival placements, final-score calculation, and a match-end decision. Territory can outweigh the survival bonus, and a shared highest score produces a year without a winner.
+
+Phase 7 Verdict:
+
+**Locked.** ✅ - 10.20.26
+
+---

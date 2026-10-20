@@ -7,6 +7,7 @@ public class BuildingNodePreview : MonoBehaviour
     [SerializeField] private GameObject unitPrefab;
     [SerializeField] private GameObject previewPrefab;
     [SerializeField] private MatchManager matchManager;
+    [SerializeField] private SpriteRenderer ownershipFlag;
 
     [Header("Unit Slots")]
     [SerializeField] private List<Transform> unitSlots = new List<Transform>();
@@ -17,23 +18,20 @@ public class BuildingNodePreview : MonoBehaviour
     [SerializeField] private List<UnitManager> previewUnits = new List<UnitManager>();
 
     [Header("Settings")]
-    [SerializeField] private bool isOccupied = false;
     [SerializeField] private bool isPreviewed = false;
     [SerializeField] private bool isOriginal = false;
     [SerializeField] private int previewPointer = -1;
     [SerializeField] private int unitPointer = -1;
 
-    private int occupyingTeam = -1;
-
     private BuildingNode myNode;
 
     private SpriteRenderer childSpriteRenderer;
     private Color originalColor;
+    private Color playerOwnershipColor = new Color(0.6918238f, 0.491016f, 0f, 1f);
+    private Color enemyOwnershipColor = new Color(0.1383647f, 0.1009453f, 0.08223559f, 1f);
 
-    public bool IsOccupied => isOccupied;
     public bool IsPreviewed => isPreviewed;
     public bool IsOriginal => isOriginal;
-    public int OccupyingTeam => occupyingTeam;
     public BuildingNode Node => myNode;
 
     private void Awake()
@@ -65,6 +63,8 @@ public class BuildingNodePreview : MonoBehaviour
         childSpriteRenderer = childTransform.GetComponent<SpriteRenderer>();
 
         originalColor = childSpriteRenderer.color;
+
+        ownershipFlag.gameObject.SetActive(false);
     }
 
     public void Initialize(BuildingNode node)
@@ -108,10 +108,11 @@ public class BuildingNodePreview : MonoBehaviour
 
             if (unitManager != null)
             {
-                unitManager.SetCurrentNode(myNode);
                 matchManager.RegisterUnit(unitManager, teamID);
+                unitManager.SetCurrentNode(myNode);
                 occupyingUnits.Add(unitManager);
                 unitManager.SetObject(unit);
+                myNode.AddOccupant(unitManager);
             }
 
             unit.transform.SetParent(slot, true);
@@ -120,19 +121,7 @@ public class BuildingNodePreview : MonoBehaviour
             GiveTeamColor(teamID, unit);
         }
 
-        isOccupied = true;
-        occupyingTeam = teamID;
         isPreviewed = false;
-    }
-
-    public List<UnitManager> GetUnitsForTeam(int teamID)
-    {
-        if (occupyingTeam == teamID)
-        {
-            return occupyingUnits;
-        }
-
-        return null;
     }
 
     public List<UnitManager> GetPreviewedUnits()
@@ -166,8 +155,7 @@ public class BuildingNodePreview : MonoBehaviour
 
         occupyingUnits.Add(unitManager);
 
-        isOccupied = true;
-        occupyingTeam = unitManager.TeamID;
+        myNode.AddOccupant(unitManager);
     }
 
     public void PreviewMove(UnitManager unitManager)
@@ -213,12 +201,6 @@ public class BuildingNodePreview : MonoBehaviour
         unitBody.color = Color.white;
 
         unitPointer--;
-
-        if (occupyingUnits.Count < 1)
-        {
-            isOccupied = false;
-            occupyingTeam = -1;
-        }
     }
 
     public void RemovePreview(UnitManager unitManager)
@@ -288,12 +270,28 @@ public class BuildingNodePreview : MonoBehaviour
 
         occupyingUnits.Remove(unit);
 
-        if (occupyingUnits.Count < 1)
-        {
-            isOccupied = false;
-            occupyingTeam = -1;
-        }
-
         unitPointer--;
+    }
+
+    public void ToggleOwnershipFlag(bool show)
+    {
+        ownershipFlag.gameObject.SetActive(show);
+
+        if (show)
+        {
+            if (myNode.OwnerTeam == 0)
+            {
+                ownershipFlag.color = playerOwnershipColor;
+            }
+            else if (myNode.OwnerTeam < 0)
+            {
+                ownershipFlag.gameObject.SetActive(false);
+            }
+            else
+            {
+                // Later it will be checked if player has this knowledge before coloring it
+                ownershipFlag.color = enemyOwnershipColor;
+            }
+        }
     }
 }

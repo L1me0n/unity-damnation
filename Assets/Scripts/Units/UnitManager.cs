@@ -7,6 +7,7 @@ public class UnitManager : MonoBehaviour
     [SerializeField] private BattlefieldGenerator battlefieldGenerator;
     [SerializeField] private TurnOrchestrator turnOrchestrator;
     [SerializeField] private ZoneManager zoneManager;
+    [SerializeField] private EncountersManager encountersManager;
 
     [Header("Unit Data")]
     [SerializeField] private int unitID;
@@ -39,6 +40,7 @@ public class UnitManager : MonoBehaviour
     public string UnitName => unitName;
     public int UnitID => unitID;
     public int TeamID => teamID;
+    public BuildingNode CurrentNode => currentNode;
     public GameObject Obj => me;
 
     public int MaxResistance => maxResistance;
@@ -84,6 +86,11 @@ public class UnitManager : MonoBehaviour
             zoneManager = FindObjectOfType<ZoneManager>();
         }
 
+        if (encountersManager == null)
+        {
+            encountersManager = FindObjectOfType<EncountersManager>();
+        }
+
         currentResistance = maxResistance;
         currentStrength = maxStrength;
         currentAgility = maxAgility;
@@ -125,6 +132,11 @@ public class UnitManager : MonoBehaviour
 
     public void SetCurrentNode(BuildingNode node)
     {
+        if (previousNode != null)
+        {
+            previousNode.RemoveOccupant(this);
+        }
+
         currentNode = node;
         previousNode = null;
     }
@@ -157,14 +169,23 @@ public class UnitManager : MonoBehaviour
             return;
         }
 
-        BuildingNodePreview currentNodePreview = battlefieldGenerator.Nodes[currentNode];
-
-        currentNodePreview.SetOriginal(false);
-        
         if (targetNode == null)
         {
             return;
         }
+
+        if (targetNode.OccupyingUnits.Count > 0)
+        {
+            if (targetNode.OccupyingUnits[0].TeamID != teamID)
+            {
+                encountersManager.RegisterEncounter(this, targetNode);
+                return;
+            }
+        }
+
+        BuildingNodePreview currentNodePreview = battlefieldGenerator.Nodes[currentNode];
+
+        currentNodePreview.SetOriginal(false);
 
         BuildingNodePreview targetNodePreview = battlefieldGenerator.Nodes[targetNode];
 
@@ -172,7 +193,23 @@ public class UnitManager : MonoBehaviour
         targetNodePreview.MoveUnitHere(this);
 
         previousNode = currentNode;
-        currentNode = targetNode;
+        SetCurrentNode(targetNode);
+        targetNode = null;
+    }
+
+    public void ConfirmTargetAfterEncounter()
+    {
+        BuildingNodePreview currentNodePreview = battlefieldGenerator.Nodes[currentNode];
+
+        currentNodePreview.SetOriginal(false);
+
+        BuildingNodePreview targetNodePreview = battlefieldGenerator.Nodes[targetNode];
+
+        targetNodePreview.RemovePreview(this);
+        targetNodePreview.MoveUnitHere(this);
+
+        previousNode = currentNode;
+        SetCurrentNode(targetNode);
         targetNode = null;
     }
 
@@ -194,7 +231,7 @@ public class UnitManager : MonoBehaviour
         }
     }
 
-    private void Die()
+    public void Die()
     {
         if (!isAlive)
         {
@@ -203,11 +240,15 @@ public class UnitManager : MonoBehaviour
         
         isAlive = false;
 
-        BuildingNodePreview currentNodePreview = battlefieldGenerator.Nodes[currentNode];
+        if (currentNode != null)
+        {
+            BuildingNodePreview currentNodePreview = battlefieldGenerator.Nodes[currentNode];
+
+            currentNodePreview.RemoveUnit(this);
+            currentNode.RemoveOccupant(this);
+        }
 
         Debug.Log("Unit is dead");
-
-        currentNodePreview.RemoveUnit(this);
 
         OnDeath?.Invoke(this);
 

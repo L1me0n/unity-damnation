@@ -65,10 +65,13 @@ public class CommandMenu : MonoBehaviour
 
     private void OnNodeTapped(BuildingNodePreview nodePreview)
     {
-        if (nodePreview.IsOccupied && nodePreview.OccupyingTeam == 0)
+        if (nodePreview.Node.OccupyingUnits.Count > 0)
         {
-            OpenCommandMenu(nodePreview);
-            nodePreview.SetOriginal(true);
+            if (nodePreview.Node.OccupyingUnits[0].TeamID == 0)
+            {
+                OpenCommandMenu(nodePreview);
+                nodePreview.SetOriginal(true);
+            }
         }
     }
 
@@ -78,7 +81,13 @@ public class CommandMenu : MonoBehaviour
         isMenuOpen = true;
 
         int i = 0;
-        List<UnitManager> playerUnits = nodePreview.GetUnitsForTeam(0); 
+        
+        List<UnitManager> playerUnits = new List<UnitManager>();
+        foreach (UnitManager unit in nodePreview.Node.OccupyingUnits)
+        {
+            playerUnits.Add(unit);
+        }
+         
         myNode = nodePreview.Node;
         foreach (UnitManager unit in playerUnits)
         {
