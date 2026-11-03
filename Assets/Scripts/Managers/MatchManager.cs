@@ -11,6 +11,7 @@ public class MatchManager : MonoBehaviour
     [SerializeField] private DeploymentSelection deploymentSelection;
     [SerializeField] private EncountersManager encountersManager;
     [SerializeField] private TurnOrchestrator turnOrchestrator;
+    [SerializeField] private DeploymentPositions deploymentPositionsInformation;
 
     [Header("Units")]
     [SerializeField] private int maxTeams = 4;
@@ -28,6 +29,9 @@ public class MatchManager : MonoBehaviour
     [SerializeField] private List<int> positions = new List<int>();
     [SerializeField] private List<int> survivalPool = new List<int> {5, 2, 1, 0};
 
+    [Header("Deployment Positions")]
+    [SerializeField] private List<BuildingNode> deploymentPositions = new List<BuildingNode>(new BuildingNode[4]);
+
     private int id = 0;
 
     private int currentPosition = 4;
@@ -40,6 +44,8 @@ public class MatchManager : MonoBehaviour
     public bool IsEndable => isEndable;
     public bool MatchEnded => matchEnded;
     public IReadOnlyList<UnitManager> AllUnits => allUnits;
+    public IReadOnlyList<AITeam> AITeams => aiTeams;
+    public IReadOnlyList<BuildingNode> DeploymentPositions => deploymentPositions;
 
     public event Action<int> OnPlayerPointsChanged;
 
@@ -75,6 +81,11 @@ public class MatchManager : MonoBehaviour
         if (turnOrchestrator == null)
         {
             turnOrchestrator = FindObjectOfType<TurnOrchestrator>();
+        }
+
+        if (deploymentPositionsInformation == null)
+        {
+            deploymentPositionsInformation = FindObjectOfType<DeploymentPositions>();
         }
 
         for (int i = 0; i < maxTeams; i++)
@@ -122,6 +133,11 @@ public class MatchManager : MonoBehaviour
         }
     }
 
+    public void RecordDeploymentPositions(BuildingNode node, int teamId)
+    {
+        deploymentPositions[teamId] = node;
+    }
+
     public void RegisterUnit(UnitManager unit, int teamID)
     {
         if (!allUnits.Contains(unit))
@@ -150,8 +166,14 @@ public class MatchManager : MonoBehaviour
         node.AddOccupant(unit);
     }
 
-    public void MoveWinner(BuildingNode node, int winnerId, List<UnitManager> defenders, Dictionary<int, List<UnitManager>> attackers, bool isOccupantWinner)
+    public void MoveWinner(BuildingNode node, int winnerId, List<UnitManager> defenders, 
+        Dictionary<int, List<UnitManager>> attackers, bool isOccupantWinner)
     {
+        if (winnerId == 0)
+        {
+            deploymentPositionsInformation.HideAt(node);
+        }
+
         foreach (int i in attackers.Keys)
         {
             if (winnerId == i)
@@ -200,6 +222,14 @@ public class MatchManager : MonoBehaviour
         }
 
         allUnits.Remove(unit);
+
+        if (unit.TeamID == 0)
+        {
+            return;
+        }
+        
+        AITeam aiTeam = aiTeams[unit.TeamID - 1];
+        aiUnits[aiTeam].Remove(unit);
     }
 
     public void UpdateNodePoints(List<int> points)
@@ -209,8 +239,15 @@ public class MatchManager : MonoBehaviour
         OnPlayerPointsChanged?.Invoke(nodePoints[0]);
     }
 
+    public int GetTeamNodePoints(int teamId)
+    {
+        return nodePoints[teamId];
+    }
+
     public void UpdatePositions(int teamID)
     {
+        Debug.Log($"Team {teamID} has been eliminated!");
+
         if (positions[teamID] != -1)
         {
             return;
@@ -306,6 +343,11 @@ public class MatchManager : MonoBehaviour
         for (int i = 0; i < maxTeams; i++)
         {
             finalScores[i] = nodePoints[i] + survivalPoints[i];
+        }
+
+        for (int i = 0; i < maxTeams; i++)
+        {
+            Debug.Log($"T{i}: alive={aliveUnits[i]}, place={positions[i]}, " + $"nodes={nodePoints[i]}, survival={survivalPoints[i]}, score={finalScores[i]}");
         }
 
         var sortedScores = finalScores.OrderByDescending(pair => pair.Value);

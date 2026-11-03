@@ -102,7 +102,19 @@ public class OwnershipChecker : MonoBehaviour
         {
             if (node.OccupyingUnits.Count > 0)
             {
-                node.SetOwnerTeam(node.OccupyingUnits[0].TeamID);
+                int occupantTeamId = node.OccupyingUnits[0].TeamID;
+                node.SetOwnerTeam(occupantTeamId);
+                foreach(AITeam aiTeam in matchManager.AITeams)
+                {
+                    if (aiTeam.TeamId == occupantTeamId)
+                    {
+                        aiTeam.AddClaimedTerritory(node);
+                    }
+                    else
+                    {
+                        aiTeam.TakeClaimedTerritory(node);
+                    }
+                }
             }
         }
     }

@@ -37,6 +37,8 @@ public class UnitManager : MonoBehaviour
     [SerializeField] private int maxIntelligence;
     [SerializeField] private int currentIntelligence;
 
+    private Transform hotDropSlot;
+
     public string UnitName => unitName;
     public int UnitID => unitID;
     public int TeamID => teamID;
@@ -174,6 +176,11 @@ public class UnitManager : MonoBehaviour
             return;
         }
 
+        if (hotDropSlot != null)
+        {
+            return;    
+        }
+
         if (targetNode.OccupyingUnits.Count > 0)
         {
             if (targetNode.OccupyingUnits[0].TeamID != teamID)
@@ -199,11 +206,16 @@ public class UnitManager : MonoBehaviour
 
     public void ConfirmTargetAfterEncounter()
     {
+        if (currentNode == null)
+        {
+            ConfirmTargetAfterHotDrop();
+            return;    
+        }
+
         BuildingNodePreview currentNodePreview = battlefieldGenerator.Nodes[currentNode];
+        BuildingNodePreview targetNodePreview = battlefieldGenerator.Nodes[targetNode];
 
         currentNodePreview.SetOriginal(false);
-
-        BuildingNodePreview targetNodePreview = battlefieldGenerator.Nodes[targetNode];
 
         targetNodePreview.RemovePreview(this);
         targetNodePreview.MoveUnitHere(this);
@@ -213,20 +225,35 @@ public class UnitManager : MonoBehaviour
         targetNode = null;
     }
 
-    private void CheckNode(int turn)
+    public void SetUpForHotDrop(BuildingNode node, Transform slot)
     {
-        if (teamID != 0)
+        targetNode = node;
+        hotDropSlot = slot;
+    }
+
+    private void ConfirmTargetAfterHotDrop()
+    {
+        if (targetNode == null || hotDropSlot == null)
         {
             return;
         }
 
+        BuildingNodePreview targetNodePreview = battlefieldGenerator.Nodes[targetNode];
+        targetNodePreview.HandleHotDrop(this, hotDropSlot);
+
+        targetNode = null;
+        hotDropSlot = null;
+    }
+
+    private void CheckNode(int turn)
+    {
         BuildingNodePreview currentNodePreview = battlefieldGenerator.Nodes[currentNode];
 
         NodeSafety nodeSafety = currentNodePreview.gameObject.GetComponent<NodeSafety>();
 
         if (!nodeSafety.IsSafe)
         {
-            Debug.Log($"taking {zoneManager.ZoneDamage} damage");
+            Debug.Log($"taking {zoneManager.ZoneDamage} damage from team {teamID}");
             SetCurrentResistance(-zoneManager.ZoneDamage);
         }
     }

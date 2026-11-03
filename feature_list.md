@@ -498,3 +498,54 @@ Phase 7 Verdict:
 **Locked.** ✅ - 10.20.26
 
 ---
+
+### Phase 8 Recap: AI Deployment and Knowledge Foundation
+
+Goal:
+
+Complete legal AI deployment, reveal the committed starting positions, and establish separate knowledge for each AI team before strategic decisions begin.
+
+Scripts Created / Edited:
+
+- AITeam.cs
+- KnowledgeSource.cs
+- DeploymentPositions.cs
+- DeploymentSelection.cs
+- MatchManager.cs
+- BuildingNodePreview.cs
+- TurnOrchestrator.cs
+- UnitManager.cs
+- ZoneBuilder.cs
+- OwnershipChecker.cs
+
+Implemented:
+
+- Each AI team independently selects one random building from those permitted by the two deployment-line restrictions. A selection does not reserve the building, so multiple teams can drop together.
+- MatchManager records every team's confirmed starting building. AI selections remain hidden from the player until the player confirms deployment.
+- All AI units enter authoritative node occupancy when their deployment is uncontested. Units arriving at an occupied building are registered as pending encounter attackers instead.
+- Player units dropping onto an AI-occupied building also register for the encounter. Hot-drop units avoid a second registration during turn confirmation.
+- The existing temporary encounter resolver determines the winner. Winning player units enter node occupancy correctly and clear their pending hot-drop target; losing units are removed through the established death flow.
+- DeploymentPositions displays colored unit-count badges on enemy starting buildings. Two or three AI teams sharing a building receive separate numbers on the same badge.
+- Deployment badges disappear at the next turn transition. A badge on a building won by the player disappears as soon as that encounter resolves.
+- Each AI team records the other teams' revealed starting buildings as position observations containing team ID, building ID, starting unit count, observation turn, and source.
+- Deployment sightings do not create enemy ownership observations. They remain historical records rather than references to the enemy's live location.
+- AITeam maintains separate collections for its claimed buildings, enemy-position observations, enemy-territory observations, and unit snapshots. Observation types support unknown identity or count and mark superseded position or territory information where appropriate.
+- OwnershipChecker updates each AI team's exact claimed-building list after encounter resolution and ownership checks, including removal when another team takes one of its buildings.
+- AI units now receive zone damage according to the safety of their authoritative current node, using the same unit damage and elimination flow as player units.
+- ZoneBuilder exposes whether a future safe area has been revealed and whether a building lies inside its revealed borders. Node safety, zone state, and team territory points are available for later AI decisions.
+
+Important Technical Note:
+
+Shared drops keep attackers outside settled node occupancy until the encounter has a winner. The existing random encounter winner remains a temporary prototype rule while combat is deferred. The deployment-position badges are a short-lived player display; an AI's turn-stamped deployment observation is a separate historical knowledge record and does not silently follow later hidden movement.
+
+Scope Note:
+
+This phase establishes deployment and knowledge storage. Intelligence detection rolls and detailed encounter observations are not yet connected, although their observation methods are prepared. Selecting the latest relevant observation, combining public zone and score information with knowledge, deriving relative information for candidate moves, and choosing AI movement belong to Phase 9. Team separation belongs to Phase 10. The player ownership overlay still needs a later historical-knowledge presentation pass; a known node must not reveal a hidden ownership change through its live owner.
+
+Result:
+
+All four teams can commit starting buildings, shared drops enter the encounter flow, and the player sees the revealed AI starting positions. AI units participate in zone damage and each AI retains its own deployment sightings and claimed territory. The information foundation is ready for decision logic without making hidden enemy movement automatically visible.
+
+Phase 8 Verdict:
+
+**Locked.** ✅ - 11.03.26

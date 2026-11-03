@@ -8,6 +8,7 @@ public class BuildingNodePreview : MonoBehaviour
     [SerializeField] private GameObject previewPrefab;
     [SerializeField] private MatchManager matchManager;
     [SerializeField] private SpriteRenderer ownershipFlag;
+    [SerializeField] private EncountersManager encountersManager;
 
     [Header("Unit Slots")]
     [SerializeField] private List<Transform> unitSlots = new List<Transform>();
@@ -60,6 +61,11 @@ public class BuildingNodePreview : MonoBehaviour
             matchManager = FindObjectOfType<MatchManager>();
         }
 
+        if (encountersManager == null)
+        {
+            encountersManager = FindObjectOfType<EncountersManager>();
+        }
+
         childSpriteRenderer = childTransform.GetComponent<SpriteRenderer>();
 
         originalColor = childSpriteRenderer.color;
@@ -108,10 +114,19 @@ public class BuildingNodePreview : MonoBehaviour
 
             if (unitManager != null)
             {
+                unitManager.SetObject(unit);
                 matchManager.RegisterUnit(unitManager, teamID);
+                if (myNode.OccupyingUnits.Count > 0)
+                {
+                    if (myNode.OccupyingUnits[0].TeamID != teamID)
+                    {
+                        unitManager.SetUpForHotDrop(myNode, slot);
+                        encountersManager.RegisterEncounter(unitManager, myNode);
+                        continue;
+                    }
+                }
                 unitManager.SetCurrentNode(myNode);
                 occupyingUnits.Add(unitManager);
-                unitManager.SetObject(unit);
                 myNode.AddOccupant(unitManager);
             }
 
@@ -122,6 +137,24 @@ public class BuildingNodePreview : MonoBehaviour
         }
 
         isPreviewed = false;
+    }
+
+    public void HandleHotDrop(UnitManager unitManager, Transform slot)
+    {
+        if (unitManager == null)
+        {
+            return;
+        }
+
+        unitManager.SetCurrentNode(myNode);
+        GameObject unit = unitManager.Obj;
+        occupyingUnits.Add(unitManager);
+        myNode.AddOccupant(unitManager);
+
+        unit.transform.SetParent(slot, true);
+        unitPointer++;
+
+        GiveTeamColor(unitManager.TeamID, unit);
     }
 
     public List<UnitManager> GetPreviewedUnits()

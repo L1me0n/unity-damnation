@@ -1,8 +1,8 @@
 # Damnation — Game Design
 
-> **Design authority:** This document is the single source of truth for Damnation's intended game rules as of 2026-10-20.  
+> **Design authority:** This document is the single source of truth for Damnation's intended game rules as of 2026-11-03.  
 > **Platform:** Android-first, landscape, Unity 2D.  
-> **Current development state:** Hand 1 (Phases 1–5) and Hand 2 Phases 6–7 are locked. Phase 7 is a prototype lock; Phase 8 is next.  
+> **Current development state:** Hand 1 (Phases 1–5) and Hand 2 Phases 6–8 are locked. Phases 7–8 are prototype locks; Phase 9 is next.  
 > **Status vocabulary:** **Decided** is a game rule; **Implemented** describes the current prototype; **Planned** is an agreed direction awaiting implementation; **Open** requires a design decision or balance pass.
 
 ## 1. How to use this document
@@ -15,13 +15,13 @@ The most recent explicit design decision has priority over older text. **A sole 
 
 | Source supplied for this consolidation | Role and assessment |
 |---|---|
-| `README(3).md` | Broadest recent design baseline: four nations, four stats, armor, weapon-specific combat, retreat, and persistent history. Its claim that combat is the next hand is out of date; Phase 8 is next. |
+| `README(3).md` | Broadest recent design baseline: four nations, four stats, armor, weapon-specific combat, retreat, and persistent history. Its claim that combat is the next hand is out of date. |
 | `README(2).md` | Earlier, shorter concept. Its three-stat model, simultaneous combat attacks, restricted retreat, graph-distance zone, and account-level progression are superseded or unconfirmed. |
 | Earlier `README(1).md` | Almost the same full design as `README(3).md`; the two differ mainly in their outdated next-hand status lines. |
 | `backlog(2).md` | Older design and 36-phase production backlog. Useful for historical intent and compatible scope principles; its claim to be authoritative, old phase numbering, and conflicting mechanics are superseded. |
 | `phases_hand_1(3).md` | Approved Hand 1 implementation plan. Read alongside the feature list to see what actually shipped. |
-| `phases_hand_2(1).md` | Approved Phases 6–10 implementation plan. Its winner-by-survival statements and globally public exact ownership assumption are amended by this document and the latest design discussion. |
-| `feature_list(6).md` | Record of locked implementation through Phase 6, including prototype deviations from the plan. The separately approved Phase 7 recap can be pasted into the feature list; implementation records do not by themselves redefine intended game rules. |
+| `phases_hand_2(1).md` | Approved Phases 6–10 implementation plan. Its winner-by-survival statements, globally public exact ownership assumption, Phase 8 decision-context boundary, and pre-turn unresolved-hot-drop requirement are amended by this document and later explicit decisions. |
+| `feature_list.md` | Record of locked implementation and prototype deviations. Implementation records do not by themselves redefine intended game rules. |
 | `playthrough(2).md` | Draft player journey and interface ideas. Menus, Competitive mode, and XP displays in that draft are not locked requirements. |
 
 ## 2. Core identity
@@ -40,7 +40,9 @@ The first release uses one board ruleset, adjacent node movement, four weapon in
 - Turn 0 is for deployment. Two independent rolls choose unavailable deployment lines from the eight rows and eight columns; both rolls may select the same line. These restrictions disappear after deployment.
 - Each nation selects one legal starting building and drops all six units there. AI starting buildings are chosen independently and uniformly among legal buildings. A choice does not reserve the building for another nation.
 - Starting buildings become public after all four nations commit. Later enemy movements are hidden unless a rule legitimately reveals them.
-- Two, three, or four nations can land together. A shared building creates a pending hot-drop encounter before normal Turn 1 play; it does not receive an arbitrary winner or uncontested owner.
+- Two, three, or four nations can land together. The intended combat system resolves a shared building before normal Turn 1 play; it does not assign an arbitrary winner or uncontested owner.
+
+The Phase 8 prototype registers shared drops as encounters with separate defenders and pending attackers. Its existing temporary random encounter resolver chooses a winner when deployment advances the turn, before the player can issue normal Turn 1 orders. The winner occupies and can claim the building; losing units are eliminated. This temporary resolution enables testing and does not define the eventual combat rule or the final pre-turn encounter boundary.
 
 ### Movement and resolution — Decided / Planned
 
@@ -50,7 +52,7 @@ The first release uses one board ruleset, adjacent node movement, four weapon in
 - After movement, detection and encounters are evaluated. Capture is granted only for uncontested occupation or after an encounter winner is known. Recovery, zone damage, elimination, and match-end checks follow at their appropriate sequence boundaries.
 - A pending encounter pauses later steps that depend on its outcome. No normal-turn zone damage or ownership award should be processed as though the contested node had already been resolved.
 
-The current prototype confirms available orders, resolves registered encounters using a temporary random winner, applies zone damage if the match continues, advances the zone, and refreshes ownership, territory counts, and the HUD. If an elimination ends the match during an encounter or zone-damage callback, that resolution finishes, ownership and points refresh, and scoring runs before later turn stages. Full AI order integration, hot drops, combat, and recovery remain planned.
+The current prototype confirms available orders, resolves registered encounters using a temporary random winner, applies zone damage if the match continues, advances the zone, and refreshes ownership, territory counts, and the HUD. If an elimination ends the match during an encounter or zone-damage callback, that resolution finishes, ownership and points refresh, and scoring runs before later turn stages. AI deployment and temporary hot-drop resolution work; AI movement orders, actual combat, and recovery remain planned.
 
 ## 4. Ownership, information, and territory
 
@@ -71,7 +73,7 @@ The current prototype confirms available orders, resolves registered encounters 
 
 ### Ownership presentation — Implemented foundation / Planned completion
 
-The prototype has corner ownership flags and an Owned Buildings toggle independent of movement and zone colors. Flags refresh from current owner state while the toggle is on: player-owned nodes appear, and enemy-owned nodes appear only if the node is in `knownNodes`. The player-knowledge population was commented out during debugging, so the full intelligence flow is not yet in use. Also, a known node currently consults its live owner rather than a turn-stamped observation; Phase 8 must separate remembered enemy ownership from hidden later changes. Unknown enemy ownership must remain unmarked. The ordinary tile color continues to communicate movement selection and zone danger.
+The prototype has corner ownership flags and an Owned Buildings toggle independent of movement and zone colors. Flags refresh from current owner state while the toggle is on: player-owned nodes appear, and enemy-owned nodes appear only if the node is in `knownNodes`. The player-knowledge population was commented out during debugging, so the full intelligence flow is not yet in use. A known node still consults its live owner rather than a turn-stamped observation; a later player-knowledge UI pass must prevent hidden ownership changes from appearing through this view. Unknown enemy ownership must remain unmarked. The ordinary tile color continues to communicate movement selection and zone danger. Separate temporary colored count badges reveal enemy deployment locations after the player confirms a drop. They disappear at the next turn transition, or earlier on a node where the player wins an encounter; they do not represent live enemy positions or ownership.
 
 ### Territory points — Decided
 
@@ -115,11 +117,11 @@ Every warrior retains identity, team, current and maximum stats, current and pre
 |---|---|
 | Resistance | Health. Damage persists between encounters during a match; zero removes the unit from that match. |
 | Strength | Direct combat damage. |
-| Intelligence | Adjacent enemy detection; each point contributes a 5% detection chance. Successful detection yields a signal, not exact stats or health. |
+| Intelligence | Future adjacent scouting uses separate chances to reveal an enemy team's identity and its unit count. Either can succeed without the other; it does not reveal exact stats or health. |
 | Agility | Shared turn order for all participants in an encounter; exact initiative formula and action frequency are open. |
 | Armor | Persistent defensive integrity separate from Resistance. It changes in quarter-pip steps from 0 to 1; the damage-reduction curve is open. |
 
-Detection signals may distinguish movement, small force (1–2 units), squad (3–4), and large force (5–6). Exact duration, identity reveal, and precision remain to be finalized. Several friendly units may check independently after movement; one success is enough to create an observation.
+The intended intelligence check is once per distinct building occupied by friendly units each turn. Each such group randomly selects one occupied neighboring building among the eight surrounding positions, if any. Identity and exact count are independent rolls; two groups scouting the same enemy building both roll, and a success by either reveals that part of the information. Observations retain their turn and can hold an unknown identity or unknown count. Example increases of one percentage point per Intelligence level for identity and 0.3 percentage points for count were proposed, but the final probabilities and how a group's unit Intelligence contributes remain open. These detection rolls are not yet implemented.
 
 Remaining safely on the same building for consecutive turns can restore Resistance or repair armor. The first idle turn gives no healing; recovery starts on a later eligible idle turn. Moving, retreating, or fighting resets that unit's rest progress. Healing is the default priority; if Resistance is full, armor repair is selected. The player can choose armor repair instead. Each eligible armor-repair turn restores one quarter-pip. Healing amount, exact first repair turn, and zone-damage interaction are open.
 
@@ -157,7 +159,7 @@ The zone compresses the board and penalizes indefinite hiding. The current Unity
 | 4 | 22 | 24–27 |
 | 5 | 28 | 30–33 |
 
-The stage's current damage rises from one in Stage 1 to five in Stage 5. Movement resolves before zone damage in the current turn pipeline; future combat resolution must occur before damage is assessed. The HUD shows turn, stage, countdown, and shrink progress; state transitions have tap-to-dismiss messages. Exact final safe-region dimensions and balance values can be revised through a later explicit balance decision.
+The stage's current damage rises from one in Stage 1 to five in Stage 5. Movement resolves before zone damage in the current turn pipeline; future combat resolution must occur before damage is assessed. AI units take the same node-safety-based zone damage as player units. `ZoneBuilder` exposes whether a future safe area has been revealed and whether a building lies completely inside its current borders. The HUD shows turn, stage, countdown, and shrink progress; state transitions have tap-to-dismiss messages. Exact final safe-region dimensions and balance values can be revised through a later explicit balance decision.
 
 ## 9. AI strategy — Hand 2 design
 
@@ -167,8 +169,8 @@ Hand 2 develops this in stages:
 
 1. **Phase 6, locked:** create three six-unit AI rosters and register them. At that phase boundary, the prototype also assigned preliminary random starting nodes but had not yet integrated AI battlefield occupancy or zone damage.
 2. **Phase 7, prototype locked:** capture ownership from resolved occupancy, count territory, track elimination and survival finishes, compute scores, and announce a sole highest-score winner or top-score tie. AI units can enter the encounter/occupancy flow, with a temporary random encounter winner. A complete immutable result record and detailed result UI are deferred. Its older winner-by-survival wording is amended by Section 5 here.
-3. **Phase 8, planned:** fully integrate legal AI drops, reveal committed starting locations, register hot drops without fabricating combat results, and create nation-specific knowledge and relative decision contexts. Exact enemy ownership observations must follow Section 4's knowledge limit.
-4. **Phase 9, planned:** move whole AI squads by probabilistically weighting hold and legal neighboring moves using zone, territory, remembered threats, and future options. All AIs commit before any movement resolves.
+3. **Phase 8, prototype locked:** AI nations independently choose uniformly among legal deployment buildings, including buildings another nation has selected. All confirmed positions are revealed after the player's confirmation. AI deployment and player hot drops enter the encounter registry; the prototype's temporary random resolver settles them before normal player orders. All teams are then affected by authoritative node safety. Each AI keeps its own territory and turn-stamped, source-tagged enemy position, territory, and unit-snapshot observation structures. Public deployment sightings record team, building, and starting count without claiming ownership. Detailed intelligence and encounter observations have prepared update methods but are not called until those systems exist. This lock does not supply a full decision-time information context or relative utility helpers.
+4. **Phase 9, planned:** retrieve the latest permitted observations and public zone and score information when decisions are made; derive candidate-relative information without reading hidden enemy positions or orders. Then move whole AI squads by probabilistically weighting hold and legal neighboring moves using zone, territory, remembered threats, and future options. All AIs commit before any movement resolves. A separate read-only context object is optional if the decision code remains within `AITeam` and preserves the same information boundary.
 5. **Phase 10, planned:** evaluate complete team plans, choose whether to group, split, persist in several groups, or regroup, then assign each unit one order. Candidate patterns may include 6, 5+1, 4+2, 3+3, 4+1+1, or 2+2+2. Weights respond to territory, safety, exposure, and support.
 
 The first-match AI may use unit counts without comparing individual stat values because all starting units have equal stats. Later years need stat-aware decisions without replacing the nation/knowledge separation. Strategic choices should favor stronger options probabilistically, retain controlled variation, and support a seeded replay with inspectable candidate weights. Difficulty must not come from privileged hidden information; progression-aware difficulty scaling remains open.
@@ -185,18 +187,23 @@ The older backlog and short README describe account XP and levels as the primary
 
 ## 11. Player experience and presentation
 
-### Current prototype — Implemented through Phase 7
+### Current prototype — Implemented through Phase 8
 
 - A generated 8×8 board with mobile tap, pan, zoom, and bounded camera movement.
 - Two disabled deployment lines, player drop confirmation, six player units, a central registry, and three initialized AI rosters.
 - Player command and decision menus with per-unit selection, adjacent legal highlights, ghost previews, cancellation, and turn confirmation.
 - A five-stage shrinking-zone backend with warning borders, danger nodes, damage, stage HUD, and blocking transition messages.
-- Early random AI starting-node data, AI entry into battlefield occupancy and encounters, and a temporary random encounter result. Complete deployment and AI decision-making remain for Phases 8–10.
+- Independent legal AI deployment, shared-drop encounter registration, and temporary random encounter results. The player sees colored count badges for all enemy deployment buildings, with multiple badges on shared buildings. Badges hide on the next turn or when the player wins on that building. Normal AI movement decisions remain for Phases 9–10.
+- AI-specific historical deployment sightings and own-territory tracking, with observation structures prepared for intelligence and encounter information. AI units receive node-safety-based zone damage. Selection of decision inputs from those records remains for Phase 9.
 - Persistent building ownership, current territory counts, an ownership flag toggle, elimination placements, survival bonuses, final-score calculation, and a basic winner/tie message.
 
 ### Phase 7 lock — Prototype scope
 
-`OwnershipChecker.CheckOwners` scans actual node occupants after encounter resolution. Pending attackers do not join the occupant list until `MoveWinner` settles the encounter, so the first occupant represents the sole occupying nation at the point of this check. A vacant node keeps its previous owner. Phase 8 hot drops and future movement changes must preserve this invariant or update the capture logic. The flag toggle refreshes while active and gates enemy markers through `knownNodes`; collection of observations was disabled for debugging, and its live-owner lookup must later become turn-stamped knowledge. Match end uses a one-time guard and shows a basic message. Seeded random outcomes, an immutable four-team result record, polished result UI, multi-year progression, and full match start/end management are deferred.
+`OwnershipChecker.CheckOwners` scans actual node occupants after encounter resolution. Pending attackers do not join the occupant list until `MoveWinner` settles the encounter, so the first occupant represents the sole occupying nation at the point of this check. A vacant node keeps its previous owner. Phase 8 hot drops preserve this invariant; future movement changes must continue to preserve it or update the capture logic. The flag toggle refreshes while active and gates enemy markers through `knownNodes`; collection of observations was disabled for debugging, and its live-owner lookup must later become turn-stamped knowledge. Match end uses a one-time guard and shows a basic message. Seeded random outcomes, an immutable four-team result record, polished result UI, multi-year progression, and full match start/end management are deferred.
+
+### Phase 8 lock — Prototype scope
+
+AI drop locations are stored before the player confirms deployment but revealed only after all four choices are committed. Shared buildings are registered as encounters without adding pending attackers to settled occupancy. The existing random resolver determines their temporary winners as deployment advances to Turn 1; actual combat and a pre-turn hot-drop boundary remain future work. Player hot-drop units avoid duplicate encounter registration, and winners are placed into node occupancy before ownership and scoring refresh. Each AI's public deployment observation stores a building ID and observation turn, so later hidden movement cannot change that record. Its owned-building list follows authoritative ownership, including losses; enemy ownership is not inferred merely from a deployment. Intelligence rolls, detailed encounter reporting, decision-time selection of the latest observations, relative information helpers, and the player-facing historical ownership view remain deferred. This deliberately revises the broader Phase 8 context and hot-drop exit conditions in `phases_hand_2.md` without changing the intended final combat and fair-information rules.
 
 ### Draft experience — Not locked
 

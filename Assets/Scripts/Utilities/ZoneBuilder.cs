@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 public class ZoneBuilder : MonoBehaviour
 {
+    [Header("Settings")]
+    [SerializeField] private BattlefieldGenerator battlefieldGenerator;
+
     [Header("Borders")]
     [SerializeField] private GameObject leftBorder;
     [SerializeField] private GameObject rightBorder;
@@ -48,10 +51,18 @@ public class ZoneBuilder : MonoBehaviour
     private float topChunk;
     private float bottomChunk;
 
+    private bool hasRevealedFutureArea = false;
+
     public bool IsShrinking => isShrinking;
+    public bool HasRevealedFutureArea => hasRevealedFutureArea;
 
     private void Awake()
     {
+        if (battlefieldGenerator == null)
+        {
+            battlefieldGenerator = FindObjectOfType<BattlefieldGenerator>();
+        }
+
         leftCenter = leftShrinking.transform.position.x;
         rightCenter = rightShrinking.transform.position.x;
         topCenter = topShrinking.transform.position.y;
@@ -100,6 +111,8 @@ public class ZoneBuilder : MonoBehaviour
         zoneHalfExtent = stageHalfExtents[zoneStage];
 
         ConfigureBorders(zoneFocus, zoneHalfExtent);
+
+        hasRevealedFutureArea = true;
     }
 
     private void ShrinkZone()
@@ -174,6 +187,7 @@ public class ZoneBuilder : MonoBehaviour
         if (shrinkingStep == maxSteps)
         {
             isShrinking = false;
+            hasRevealedFutureArea = false;
         }
     }
 
@@ -236,5 +250,24 @@ public class ZoneBuilder : MonoBehaviour
     private float GenerateValue(int focusSize)
     {
         return UnityEngine.Random.Range(-focusSize, focusSize + 1);
+    }
+
+    public bool IsInsideRevealedFutureArea(BuildingNode node)
+    {
+        if (!hasRevealedFutureArea)
+        {
+            return false;
+        }
+        
+        BuildingNodePreview nodePreview = battlefieldGenerator.Nodes[node];
+
+        BoxCollider2D nodeCollider = nodePreview.GetComponent<BoxCollider2D>();
+
+        Bounds boxBounds = nodeCollider.bounds;
+
+        return  boxBounds.min.x >= leftBorder.transform.position.x &&
+                boxBounds.max.x <= rightBorder.transform.position.x &&
+                boxBounds.min.y >= bottomBorder.transform.position.y &&
+                boxBounds.max.y <= topBorder.transform.position.y;
     }
 } 

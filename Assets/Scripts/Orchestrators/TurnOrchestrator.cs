@@ -7,6 +7,9 @@ public class TurnOrchestrator : MonoBehaviour
     [SerializeField] private TurnManager turnManager;
     [SerializeField] private MatchManager matchManager;
 
+    public event Action<int> ShowDeploymentPositions;
+    public event Action<int> HideDeploymentPositions;
+
     public event Action<int> ConfirmTeamDecisions;
     public event Action<int> ResolveEncounters;
     public event Action<int> UnitZoneDamage;
@@ -44,6 +47,15 @@ public class TurnOrchestrator : MonoBehaviour
         if (matchManager.MatchEnded)
         {
             return;
+        }
+
+        if (turn == 1)
+        {
+            ShowDeploymentPositions?.Invoke(turn);
+        }
+        else if (turn > 1)
+        {
+            HideDeploymentPositions?.Invoke(turn);
         }
 
         ConfirmTeamDecisions?.Invoke(turn);
