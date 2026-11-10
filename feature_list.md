@@ -549,3 +549,49 @@ All four teams can commit starting buildings, shared drops enter the encounter f
 Phase 8 Verdict:
 
 **Locked.** ✅ - 11.03.26
+
+---
+
+### Phase 9 Recap: AI Neighbouring-Node Selection
+
+Goal:
+
+Let each active AI nation choose probabilistically between holding and moving its whole squad to a legal neighbouring building, using information that nation is allowed to know.
+
+Scripts Created / Edited:
+
+- AITeam.cs
+- BattlefieldGenerator.cs
+- BuildingNodePreview.cs
+- UnitManager.cs
+- TurnOrchestrator.cs
+- MatchManager.cs
+- EncountersManager.cs
+
+Implemented:
+
+- BattlefieldGenerator supplies orthogonally adjacent buildings, giving each AI its current building and legal neighbours as movement candidates.
+- Each active AI makes one destination choice for its surviving squad. Choosing its current building issues no movement order; eliminated teams issue no order.
+- Candidate weights account for current node safety, the revealed future safe area, the AI's own claimed buildings, remembered enemy ownership, and the count and age of remembered enemy positions.
+- Historical enemy observations are read from the AI's own knowledge. Hidden live enemy positions, other teams' territory totals, and unconfirmed orders are not used.
+- Candidate scores are clamped to positive final weights and sampled with a weighted random roll, so stronger choices are more likely without becoming mandatory.
+- MatchManager initializes Unity's random source from an inspector-set match seed before deployment and logs that seed.
+- Decision logs include each candidate's safety, points, and enemy components, its final clamped weight, the roll and total weight, and the selected building.
+- TurnOrchestrator obtains all AI orders before MatchManager examines player and AI destinations. Contested destinations enter the existing temporary encounter resolver; uncontested units move through their established unit operations.
+- Ownership, territory points, zone damage, and match-end checks remain in the central turn sequence after movement and encounter resolution.
+
+Important Technical Note:
+
+The seed controls Unity's shared random sequence. Repeating a match requires the same seed, player actions, and sequence of events that consume randomness. The movement decision uses each AI's latest unsuperseded observations for a candidate; deployment sightings remain historical rather than tracking hidden movement.
+
+Scope Note:
+
+AI nations cannot compare their current territory ranking because opponents' territory totals are hidden. Evaluating the next turn's movement routes is deferred to Phase 10. Teams remain together in Phase 9; splitting and regrouping belong to Phase 10. Intelligence rolls and detailed encounter observations are still awaiting their later integration. Encounter winners remain temporary random outcomes until combat is implemented. Unity behaviour testing remains scheduled for the end of the hand.
+
+Result:
+
+All active AI nations can make weighted, information-limited whole-squad movement decisions before the shared resolution step. The match seed and candidate logs make those decisions inspectable and repeatable under the same sequence of inputs.
+
+Phase 9 Verdict:
+
+**Locked.** ✅ - 11.10.26

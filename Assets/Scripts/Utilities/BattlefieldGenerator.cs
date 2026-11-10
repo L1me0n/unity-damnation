@@ -75,4 +75,36 @@ public class BattlefieldGenerator : MonoBehaviour
         //row = Mathf.Abs(row - battlefieldHeight + 1);
         return allNodes[row][column];
     }
+
+    public List<BuildingNode> GetNeighbors(BuildingNode node)
+    {
+        if (node == null)
+        {
+            return null;
+        }
+
+        List<BuildingNode> neighbors = new List<BuildingNode>();
+
+        int nodeColumn = node.Column;
+        int nodeRow = node.Row;
+
+        if (!(nodeColumn-1 < 0))
+        {
+            neighbors.Add(GetNode(nodeRow, nodeColumn-1));
+        }
+        if (!(nodeColumn+1 > battlefieldWidth-1))
+        {
+            neighbors.Add(GetNode(nodeRow, nodeColumn+1));
+        }
+        if (!(nodeRow-1 < 0))
+        {
+            neighbors.Add(GetNode(nodeRow-1, nodeColumn));
+        }
+        if (!(nodeRow+1 > battlefieldHeight-1))
+        {
+            neighbors.Add(GetNode(nodeRow+1, nodeColumn));
+        }
+
+        return neighbors;
+    }
 }

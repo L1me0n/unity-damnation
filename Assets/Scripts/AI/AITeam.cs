@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using Random = UnityEngine.Random;
+using System.Linq;
 
 public class AITeam : MonoBehaviour
 {
@@ -46,6 +47,8 @@ public class AITeam : MonoBehaviour
     [SerializeField] private Transform unitsPool;
     [SerializeField] private MatchManager matchManager;
     [SerializeField] private TurnOrchestrator turnOrchestrator;
+    [SerializeField] private ZoneManager zoneManager;
+    [SerializeField] private ZoneBuilder zoneBuilder;
 
     [Header("Knowledge")]
     [SerializeField] private List<BuildingNode> claimedTerritory = new List<BuildingNode>();
@@ -71,12 +74,14 @@ public class AITeam : MonoBehaviour
     {
         deploymentSelection.OnRuleApplied += TeamDeployment;
         turnOrchestrator.ShowDeploymentPositions += GetDeploymentPositions;
+        turnOrchestrator.MakeAIMoveDecisions += HandleAIDecisions;
     }
 
     private void OnDisable()
     {
         deploymentSelection.OnRuleApplied -= TeamDeployment;
         turnOrchestrator.ShowDeploymentPositions -= GetDeploymentPositions;
+        turnOrchestrator.MakeAIMoveDecisions -= HandleAIDecisions;
     }
 
     private void Awake()
@@ -86,6 +91,8 @@ public class AITeam : MonoBehaviour
         unitsPool = GameObject.Find("UnitsPool").transform;
         matchManager = FindObjectOfType<MatchManager>();
         turnOrchestrator = FindObjectOfType<TurnOrchestrator>();
+        zoneManager = FindObjectOfType<ZoneManager>();
+        zoneBuilder = FindObjectOfType<ZoneBuilder>();
     }
 
     public void GenerateTeam(int id)
@@ -137,10 +144,6 @@ public class AITeam : MonoBehaviour
     private void ConfirmDeployment(BuildingNode node)
     {
         matchManager.RecordDeploymentPositions(node, teamId);
-        foreach (UnitManager unit in units)
-        {
-            matchManager.MoveAIUnit(unit, this, node);
-        }
     }
 
     private void GetDeploymentPositions(int turn)
@@ -166,6 +169,31 @@ public class AITeam : MonoBehaviour
 
                 positionObservations.Add(newObservation);
             }
+        }
+    }
+
+    private void HandleAIDecisions(int turn)
+    {
+        if (turn == 1)
+        {
+            return;
+        }
+
+        if (units.Count == 0)
+        {
+            return;
+        }
+
+        BuildingNode targetNode = DecideNextTarget(units[0], turn);
+
+        foreach (UnitManager unit in units)
+        {
+            if (targetNode == unit.CurrentNode)
+            {
+                continue;
+            }
+
+            unit.SetTargetNode(targetNode);
         }
     }
 
@@ -348,5 +376,191 @@ public class AITeam : MonoBehaviour
         }
 
         UpdateClaimedTerritoryObservation(node, winnerId, currentTurn, KnowledgeSource.Encounter);
+    }
+
+    // TODO
+    // Each condition either reduces or increases that weights
+    // There are 3 lanes in Phase 9: safety, points boost, and enemy positioning
+    // Safety: base is +90 for safe, stages 1-3 -10. stages 4-5 -120.
+    // is inside revealed future area and not shrinking +100, shrinking +95
+    // Points boost: None is +30, New building +65, Enemy-claimed building +100 (for each 5 turns old, is -5, capped at -35)
+    // Enemy positioning: None 100, Just position observation -15, for each +unit obseravtion starting from 2 -15 (for each 1 turn old, is +3, capped at 100)
+    // Clamped at 10.
+    public BuildingNode DecideNextTarget(UnitManager unit, int currentTurn)
+    {
+        float earlyStageLoss = 10f;
+        float lateStageLoss = 120f;
+
+        Dictionary<BuildingNode, float> possibleTargets = new Dictionary<BuildingNode, float>();
+
+        BuildingNode currentNode = unit.CurrentNode;
+        List<BuildingNode> neighbors = battlefieldGenerator.GetNeighbors(currentNode);
+
+        possibleTargets[currentNode] = 0f;
+
+        // First check if any of the neighbors are safe and unclaimed
+        foreach (BuildingNode neighbor in neighbors)
+        {
+            possibleTargets[neighbor] = 0f;
+        }
+
+        List<BuildingNode> candidates = new List<BuildingNode>(possibleTargets.Keys);
+
+        List<ClaimedTerritoryObservation> reversedTerritoryObservations = territoryObservations.AsEnumerable().Reverse().ToList();
+        List<EnemyPositionObservation> reversedPositionObservations = positionObservations.AsEnumerable().Reverse().ToList();
+
+        foreach (BuildingNode node in candidates)
+        {
+            float safetyBase = 90f;
+            float pointsBase = 30f;
+            float enemiesBase = 100f;
+
+            BuildingNodePreview preview = battlefieldGenerator.Nodes[node];
+
+            NodeSafety nodeSafety = preview.gameObject.GetComponent<NodeSafety>();
+
+            if (zoneBuilder.IsInsideRevealedFutureArea(node))
+            {
+                if (zoneManager.IsShrinking)
+                {
+                    safetyBase += 5f;
+                }
+                else
+                {
+                    safetyBase += 10f;
+                }
+            }
+
+            else if (!nodeSafety.IsSafe)
+            {
+                float stagesLoss = 3 * earlyStageLoss + 2 * lateStageLoss;
+                switch (zoneManager.CurrentStage)
+                {
+                    case 5:
+                        safetyBase -= stagesLoss;
+                        break;
+                    
+                    case 4:
+                        safetyBase -= stagesLoss - lateStageLoss;
+                        break;
+
+                    case 3:
+                        safetyBase -= stagesLoss - 2 * lateStageLoss;
+                        break;
+
+                    case 2:
+                        safetyBase -= stagesLoss - 2 * lateStageLoss - earlyStageLoss;
+                        break;
+
+                    case 1:
+                        safetyBase -= stagesLoss - 2 * lateStageLoss - 2 * earlyStageLoss;
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+
+            bool isEnemyClaimed = false;
+
+            foreach (ClaimedTerritoryObservation claimedTerritory in reversedTerritoryObservations)
+            {
+                if (claimedTerritory.isSuperseded)
+                {
+                    continue;
+                }
+                
+                if (claimedTerritory.nodeId == node.NodeID)
+                {
+                    float pointsBonus = 70f;
+                    pointsBonus -= Mathf.Min(Mathf.Floor((currentTurn - claimedTerritory.turn) / 5f) * 5, 35f);
+                    pointsBase += pointsBonus;
+                    isEnemyClaimed = true;
+                    break;
+                }
+            }
+
+            if (!claimedTerritory.Contains(node) && !isEnemyClaimed)
+            {
+                pointsBase += 35f;
+            }
+
+            foreach (EnemyPositionObservation positionObservation in reversedPositionObservations)
+            {
+                if (positionObservation.isSuperseded)
+                {
+                    continue;
+                }
+
+                if (positionObservation.nodeId == node.NodeID)
+                {
+                    if (positionObservation.count == -1)
+                    {
+                        enemiesBase = Mathf.Min(Mathf.Floor(currentTurn - positionObservation.turn) * 3 + enemiesBase - 15f, 100f);
+                        break;
+                    }
+
+                    enemiesBase = Mathf.Min(Mathf.Floor(currentTurn - positionObservation.turn) * 3 + enemiesBase - positionObservation.count * 15f, 100f);
+                    break;
+                }
+            }
+
+            Debug.Log($"For team {unit.TeamID}\n" +
+                      $"Candidate node has row {node.Row} and column {node.Column}\n" +
+                      $"Safety bonus is {safetyBase}\n" +
+                      $"Points bonus is {pointsBase}\n" +
+                      $"Enemies bonus is {enemiesBase}\n");
+            possibleTargets[node] += safetyBase + pointsBase + enemiesBase;
+        }
+
+        float weightsSum = 0f;
+
+        foreach (BuildingNode node in candidates)
+        {
+            possibleTargets[node] = Mathf.Max(possibleTargets[node], 10f);
+
+            Debug.Log($"For team {unit.TeamID}\n" +
+                      $"Candidate node has row {node.Row} and column {node.Column}\n" +
+                      $"Weight is {possibleTargets[node]}\n");
+
+            weightsSum += possibleTargets[node];
+        }
+
+        float randomRoll = Random.Range(0f, weightsSum);
+
+        Debug.Log($"For team {unit.TeamID} roll is {randomRoll} from {weightsSum}");
+
+        float cumulativeWeight = 0f;
+
+        BuildingNode decidedNode = null;
+
+        foreach (BuildingNode node in candidates)
+        {
+            cumulativeWeight += possibleTargets[node];
+
+            if (randomRoll < cumulativeWeight)
+            {
+                decidedNode = node;
+                break;
+            }
+        }
+
+        if (decidedNode == null)
+        {
+            decidedNode = candidates[candidates.Count - 1];
+        }
+
+        Debug.Log($"For team {unit.TeamID} decided node has row {decidedNode.Row} and column {decidedNode.Column}");
+        return decidedNode;
+    }
+
+    public void KillUnit(UnitManager unit)
+    {
+        if (!units.Contains(unit))
+        {
+            return;
+        }
+
+        units.Remove(unit);
     }
 }

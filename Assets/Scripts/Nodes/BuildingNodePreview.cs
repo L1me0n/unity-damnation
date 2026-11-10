@@ -112,48 +112,30 @@ public class BuildingNodePreview : MonoBehaviour
             GameObject unit = Instantiate(unitPrefab, slot.position, Quaternion.identity);
             UnitManager unitManager = unit.GetComponent<UnitManager>();
 
-            if (unitManager != null)
-            {
-                unitManager.SetObject(unit);
-                matchManager.RegisterUnit(unitManager, teamID);
-                if (myNode.OccupyingUnits.Count > 0)
-                {
-                    if (myNode.OccupyingUnits[0].TeamID != teamID)
-                    {
-                        unitManager.SetUpForHotDrop(myNode, slot);
-                        encountersManager.RegisterEncounter(unitManager, myNode);
-                        continue;
-                    }
-                }
-                unitManager.SetCurrentNode(myNode);
-                occupyingUnits.Add(unitManager);
-                myNode.AddOccupant(unitManager);
-            }
-
-            unit.transform.SetParent(slot, true);
-            unitPointer++;
-
-            GiveTeamColor(teamID, unit);
+            unitManager.SetObject(unit);
+            matchManager.RegisterUnit(unitManager, teamID);
         }
 
         isPreviewed = false;
     }
 
-    public void HandleHotDrop(UnitManager unitManager, Transform slot)
+    public void HandleDeployment(UnitManager unitManager)
     {
         if (unitManager == null)
         {
             return;
         }
 
-        unitManager.SetCurrentNode(myNode);
+        unitPointer++;
+
+        Transform slot = unitSlots[unitPointer];
         GameObject unit = unitManager.Obj;
+        unitManager.SetCurrentNode(myNode);
         occupyingUnits.Add(unitManager);
         myNode.AddOccupant(unitManager);
 
         unit.transform.SetParent(slot, true);
-        unitPointer++;
-
+    
         GiveTeamColor(unitManager.TeamID, unit);
     }
 

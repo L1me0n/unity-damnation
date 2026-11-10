@@ -6,33 +6,27 @@ public class EncountersManager : MonoBehaviour
 {
     public class Encounter
     {
-        public Dictionary<int, List<UnitManager>> attackingTeams = new Dictionary<int, List<UnitManager>>();
-        public List<UnitManager> defendingTeam = new List<UnitManager>(); // the one already occupying the node
+        public Dictionary<int, List<UnitManager>> teams = new Dictionary<int, List<UnitManager>>();
         public BuildingNode node;
 
         public void Init(UnitManager unit, BuildingNode buildingNode)
         {
-            attackingTeams[unit.TeamID] = new List<UnitManager>();
-            attackingTeams[unit.TeamID].Add(unit);
-
-            foreach (UnitManager unitManager in buildingNode.OccupyingUnits)
-            {
-                defendingTeam.Add(unitManager);
-            }
+            teams[unit.TeamID] = new List<UnitManager>();
+            teams[unit.TeamID].Add(unit);
 
             node = buildingNode;
         }
         
         public void AddInfo(UnitManager unit)
         {
-            if (!attackingTeams.ContainsKey(unit.TeamID))
+            if (!teams.ContainsKey(unit.TeamID))
             {
-                attackingTeams[unit.TeamID] = new List<UnitManager>();
-                attackingTeams[unit.TeamID].Add(unit);
+                teams[unit.TeamID] = new List<UnitManager>();
+                teams[unit.TeamID].Add(unit);
             }
             else
             {
-                attackingTeams[unit.TeamID].Add(unit);
+                teams[unit.TeamID].Add(unit);
             }
         }
     }
@@ -43,16 +37,6 @@ public class EncountersManager : MonoBehaviour
 
     List<Encounter> encounters = new List<Encounter>();
     Dictionary<BuildingNode, Encounter> encounterNodes = new Dictionary<BuildingNode, Encounter>();
-
-    private void OnEnable()
-    {
-        turnOrchestrator.ResolveEncounters += ResolveEncounters;
-    }
-
-    private void OnDisable()
-    {
-        turnOrchestrator.ResolveEncounters -= ResolveEncounters;
-    }
 
     private void Awake()
     {
@@ -67,20 +51,20 @@ public class EncountersManager : MonoBehaviour
         }
     }
 
-    public void RegisterEncounter(UnitManager attackerUnit, BuildingNode node)
+    public void RegisterEncounter(UnitManager unit, BuildingNode node)
     {
         if (encounterNodes.ContainsKey(node))
         {
             Encounter encounter = encounterNodes[node];
 
-            encounter.AddInfo(attackerUnit);
+            encounter.AddInfo(unit);
         }
         else
         {
             Encounter encounter = new Encounter();
 
             encounter.Init(
-                attackerUnit,
+                unit,
                 node
             );
 
@@ -89,30 +73,44 @@ public class EncountersManager : MonoBehaviour
         }
     }
 
-    public void ResolveEncounters(int turn)
+    public void ResolveEncounters()
     {
         foreach (Encounter encounter in encounters)
         {
             List<int> teamIds = new List<int>();
-            teamIds.Add(encounter.defendingTeam[0].TeamID);
-            foreach (int id in encounter.attackingTeams.Keys)
+            foreach (int id in encounter.teams.Keys)
             {
                 teamIds.Add(id);
             }
 
             int winner = Random.Range(0, teamIds.Count);
 
-            if (winner == 0)
+            List<UnitManager> losers = new List<UnitManager>();
+            List<UnitManager> winners = new List<UnitManager>();
+            List<UnitManager> participatedTeams = new List<UnitManager>();
+
+            foreach (var pair in encounter.teams)
             {
-                encounter.node.SetOwnerTeam(teamIds[0]);
-                matchManager.MoveWinner(encounter.node, teamIds[winner], encounter.defendingTeam, encounter.attackingTeams, true);
-                
+                foreach (UnitManager unit in pair.Value)
+                {
+                    participatedTeams.Add(unit);
+                }
             }
-            else
+
+            foreach (UnitManager unit in participatedTeams)
             {
-                encounter.node.SetOwnerTeam(teamIds[winner]);;
-                matchManager.MoveWinner(encounter.node, teamIds[winner], encounter.defendingTeam, encounter.attackingTeams, false);
+                if (unit.TeamID == teamIds[winner])
+                {
+                    winners.Add(unit);
+                }
+                else
+                {
+                    losers.Add(unit);
+                }
             }
+
+            encounter.node.SetOwnerTeam(teamIds[winner]);;
+            matchManager.MoveWinner(encounter.node, winners, losers);
 
             if (matchManager.IsEndable)
             {

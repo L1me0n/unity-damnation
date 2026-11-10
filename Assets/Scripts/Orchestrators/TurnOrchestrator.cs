@@ -9,8 +9,7 @@ public class TurnOrchestrator : MonoBehaviour
 
     public event Action<int> ShowDeploymentPositions;
     public event Action<int> HideDeploymentPositions;
-
-    public event Action<int> ConfirmTeamDecisions;
+    public event Action<int> MakeAIMoveDecisions;
     public event Action<int> ResolveEncounters;
     public event Action<int> UnitZoneDamage;
     public event Action<int> ZoneStage;
@@ -52,13 +51,24 @@ public class TurnOrchestrator : MonoBehaviour
         if (turn == 1)
         {
             ShowDeploymentPositions?.Invoke(turn);
+            ZoneStage?.Invoke(turn);
+            CheckOwners?.Invoke(turn);
+            CountNodePoints?.Invoke(turn);
+            HUDdisplay?.Invoke(turn);
+
+            if (matchManager.IsEndable)
+            {
+                CheckEnd?.Invoke(turn);
+            }
+
+            return; 
         }
         else if (turn > 1)
         {
             HideDeploymentPositions?.Invoke(turn);
         }
 
-        ConfirmTeamDecisions?.Invoke(turn);
+        MakeAIMoveDecisions?.Invoke(turn);
 
         ResolveEncounters?.Invoke(turn);
         if (matchManager.IsEndable)

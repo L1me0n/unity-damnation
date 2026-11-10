@@ -32,6 +32,9 @@ public class MatchManager : MonoBehaviour
     [Header("Deployment Positions")]
     [SerializeField] private List<BuildingNode> deploymentPositions = new List<BuildingNode>(new BuildingNode[4]);
 
+    [Header("Settings")]
+    [SerializeField] private int matchSeed = 12345;
+
     private int id = 0;
 
     private int currentPosition = 4;
@@ -39,6 +42,8 @@ public class MatchManager : MonoBehaviour
 
     private bool matchEnded = false;
     private List<int> matchResults = new List<int>();
+
+    private int deploymentCount = 0;
 
     public int MaxTeams => maxTeams;
     public bool IsEndable => isEndable;
@@ -51,11 +56,13 @@ public class MatchManager : MonoBehaviour
 
     private void OnEnable()
     {
+        turnOrchestrator.ResolveEncounters += ResolveEncounters;
         turnOrchestrator.CheckEnd += EndMatch;
     }
 
     private void OnDisable()
     {
+        turnOrchestrator.ResolveEncounters -= ResolveEncounters;
         turnOrchestrator.CheckEnd -= EndMatch;
 
         foreach (UnitManager unit in allUnits)
@@ -103,6 +110,9 @@ public class MatchManager : MonoBehaviour
 
     public void BeginMatch()
     {
+        Random.InitState(matchSeed);
+        Debug.Log($"Match seed: {matchSeed}");
+
         MessageMenu.Instance.DisplayMessage("Battle starts! Please choose drop location");
 
         InitPointsList();
@@ -136,6 +146,12 @@ public class MatchManager : MonoBehaviour
     public void RecordDeploymentPositions(BuildingNode node, int teamId)
     {
         deploymentPositions[teamId] = node;
+        deploymentCount++;
+
+        if (deploymentCount == maxTeams)
+        {
+            ResolveHotDrops();
+        }
     }
 
     public void RegisterUnit(UnitManager unit, int teamID)
@@ -147,69 +163,160 @@ public class MatchManager : MonoBehaviour
             unit.SetTeamID(teamID);
             unit.SetUnitID(id);
             id++;
+
+            if (teamID != 0)
+            {
+                AITeam aiTeam = aiTeams[teamID - 1];
+                unit.SetAITeam(aiTeam);
+            }
+        }
+    }
+
+    public void ResolveHotDrops()
+    {
+        List<int> freeTeams = new List<int>();
+        HashSet<BuildingNode> nodes = new HashSet<BuildingNode>();
+        Dictionary<BuildingNode, int> defenderTeam = new Dictionary<BuildingNode, int>();
+
+        for (int i = 0; i < deploymentPositions.Count; i++)
+        {
+            BuildingNode node = deploymentPositions[i];
+
+            if (nodes.Add(node))
+            {
+                defenderTeam[node] = i;
+            }
+            else
+            {
+                if (defenderTeam.ContainsKey(node))
+                {
+                    if (defenderTeam[node] == i)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        foreach (UnitManager unit in allUnits)
+                        {
+                            if (unit.TeamID == i || unit.TeamID == defenderTeam[node])
+                            {
+                                encountersManager.RegisterEncounter(unit, node);
+                            }
+                        }
+
+                        defenderTeam.Remove(node);
+                    }
+                }
+                else
+                {
+                    foreach (UnitManager unit in allUnits)
+                    {
+                        if (unit.TeamID == i)
+                        {
+                            encountersManager.RegisterEncounter(unit, node);
+                        }
+                    }
+                }
+            }
+            
+        }
+
+        foreach (var pair in defenderTeam)
+        {
+            freeTeams.Add(pair.Value);
+        }
+
+        encountersManager.ResolveEncounters();
+
+        foreach (UnitManager unit in allUnits)
+        {
+            if (freeTeams.Contains(unit.TeamID))
+            {
+                unit.Move(deploymentPositions[unit.TeamID]);
+            }
+        }
+    }
+
+    private void ResolveEncounters(int turn)
+    {
+        List<UnitManager> freeUnits = new List<UnitManager>();
+
+        HashSet<BuildingNode> nodes = new HashSet<BuildingNode>();
+        Dictionary<BuildingNode, List<UnitManager>> defenderUnits = new Dictionary<BuildingNode, List<UnitManager>>();
+
+        foreach (UnitManager unit in allUnits)
+        {
+            BuildingNode node = unit.TargetNode == null ? unit.CurrentNode : unit.TargetNode;
+
+            if (nodes.Add(node))
+            {
+                defenderUnits[node] = new List<UnitManager>();
+                defenderUnits[node].Add(unit);
+            }
+            else
+            {
+                if (defenderUnits.ContainsKey(node))
+                {
+                    if (defenderUnits[node][0].TeamID == unit.TeamID)
+                    {
+                        defenderUnits[node].Add(unit);
+                    }
+                    else
+                    {
+                        encountersManager.RegisterEncounter(unit, node);
+                        foreach (UnitManager defender in defenderUnits[node])
+                        {
+                            encountersManager.RegisterEncounter(defender, node);
+                        }
+
+                        defenderUnits.Remove(node);
+                    }
+                }
+                else
+                {
+                    encountersManager.RegisterEncounter(unit, node);
+                }
+            }
+        }
+
+        foreach (var pair in defenderUnits)
+        {
+            foreach (UnitManager defender in pair.Value)
+            {
+                freeUnits.Add(defender);
+            }
+        }
+
+        encountersManager.ResolveEncounters();
+
+        foreach (UnitManager unit in freeUnits)
+        {
+            unit.Move();
         }
     }
 
     public void MoveAIUnit(UnitManager unit, AITeam aiTeam, BuildingNode node)
     {
-        if (node.OccupyingUnits.Count > 0)
-        {
-            if (node.OccupyingUnits[0].TeamID != aiTeam.TeamId)
-            {
-                encountersManager.RegisterEncounter(unit, node);
-                return;
-            }
-        }
-
         aiUnits[aiTeam][unit] = node;
         unit.SetCurrentNode(node);
         node.AddOccupant(unit);
     }
 
-    public void MoveWinner(BuildingNode node, int winnerId, List<UnitManager> defenders, 
-        Dictionary<int, List<UnitManager>> attackers, bool isOccupantWinner)
+    public void MoveWinner(BuildingNode node, List<UnitManager> winners, List<UnitManager> losers)
     {
-        if (winnerId == 0)
+        if (winners[0].TeamID == 0)
         {
             deploymentPositionsInformation.HideAt(node);
         }
 
-        foreach (int i in attackers.Keys)
+        foreach (UnitManager unit in losers)
         {
-            if (winnerId == i)
-            {
-                continue;
-            }
-
-            for (int j = attackers[i].Count - 1; j >= 0; j--)
-            {
-                attackers[i][j].Die();
-            }
+            unit.Die();
         }
 
-        if (isOccupantWinner)
+        foreach (UnitManager unit in winners)
         {
-            return;
-        }
-
-        for (int i = defenders.Count - 1; i >= 0; i--)
-        {
-            defenders[i].Die();
-        }
-
-        foreach (UnitManager unit in attackers[winnerId])
-        {
-            if (unit.TeamID == 0)
-            {
-                unit.ConfirmTargetAfterEncounter();
-            }
-            else
-            {
-                AITeam aiTeam = aiTeams[unit.TeamID - 1];
-                aiUnits[aiTeam][unit] = node;
-                unit.SetCurrentNode(node);
-                node.AddOccupant(unit);
-            }
+            unit.Move(node);
         }
     }
     private void HandleDeath(UnitManager unit)
@@ -230,6 +337,7 @@ public class MatchManager : MonoBehaviour
         
         AITeam aiTeam = aiTeams[unit.TeamID - 1];
         aiUnits[aiTeam].Remove(unit);
+        aiTeam.KillUnit(unit);
     }
 
     public void UpdateNodePoints(List<int> points)

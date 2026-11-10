@@ -8,6 +8,7 @@ public class UnitManager : MonoBehaviour
     [SerializeField] private TurnOrchestrator turnOrchestrator;
     [SerializeField] private ZoneManager zoneManager;
     [SerializeField] private EncountersManager encountersManager;
+    [SerializeField] private MatchManager matchManager;
 
     [Header("Unit Data")]
     [SerializeField] private int unitID;
@@ -37,13 +38,15 @@ public class UnitManager : MonoBehaviour
     [SerializeField] private int maxIntelligence;
     [SerializeField] private int currentIntelligence;
 
-    private Transform hotDropSlot;
+    private AITeam aiTeam;
 
     public string UnitName => unitName;
     public int UnitID => unitID;
     public int TeamID => teamID;
     public BuildingNode CurrentNode => currentNode;
+    public BuildingNode TargetNode => targetNode;
     public GameObject Obj => me;
+    public AITeam AiTeam => aiTeam;
 
     public int MaxResistance => maxResistance;
     public int CurrentResistance => currentResistance;
@@ -61,13 +64,11 @@ public class UnitManager : MonoBehaviour
 
     private void OnEnable()
     {
-        turnOrchestrator.ConfirmTeamDecisions += ConfirmTarget;
         turnOrchestrator.UnitZoneDamage += CheckNode;
     }
 
     private void OnDisable()
     {
-        turnOrchestrator.ConfirmTeamDecisions -= ConfirmTarget;
         turnOrchestrator.UnitZoneDamage -= CheckNode;
     }
 
@@ -92,6 +93,11 @@ public class UnitManager : MonoBehaviour
         {
             encountersManager = FindObjectOfType<EncountersManager>();
         }
+
+        if (matchManager == null)
+        {
+            matchManager = FindObjectOfType<MatchManager>();
+        } 
 
         currentResistance = maxResistance;
         currentStrength = maxStrength;
@@ -132,6 +138,11 @@ public class UnitManager : MonoBehaviour
         this.teamID = teamID;
     }
 
+    public void SetAITeam(AITeam aiTeam)
+    {
+        this.aiTeam = aiTeam;
+    }
+
     public void SetCurrentNode(BuildingNode node)
     {
         if (previousNode != null)
@@ -146,13 +157,18 @@ public class UnitManager : MonoBehaviour
     public void SetTargetNode(BuildingNode node)
     {
         targetNode = node;
+
+        if (teamID != 0)
+        {
+            return;
+        }
+
         BuildingNodePreview targetNodePreview = battlefieldGenerator.Nodes[targetNode];
         BuildingNodePreview currentNodePreview = battlefieldGenerator.Nodes[currentNode];
 
         currentNodePreview.TempRemove(this);
         targetNodePreview.PreviewMove(this);
     }
-
     public void CancelTargetNode(BuildingNode node)
     {
         targetNode = null;
@@ -164,11 +180,24 @@ public class UnitManager : MonoBehaviour
         currentNodePreview.MoveUnitHere(this);
     }
 
-    public void ConfirmTarget(int turn)
+    private void ConfirmTargetAfterDeployment(BuildingNode node)
+    {
+        BuildingNodePreview nodePreview = battlefieldGenerator.Nodes[node];
+        nodePreview.HandleDeployment(this);
+    }
+
+    public void Move(BuildingNode node = null)
     {
         if (teamID != 0)
         {
+            MoveAI(node);
             return;
+        }
+
+        if (currentNode == null)
+        {
+            ConfirmTargetAfterDeployment(node);
+            return;    
         }
 
         if (targetNode == null)
@@ -176,20 +205,6 @@ public class UnitManager : MonoBehaviour
             return;
         }
 
-        if (hotDropSlot != null)
-        {
-            return;    
-        }
-
-        if (targetNode.OccupyingUnits.Count > 0)
-        {
-            if (targetNode.OccupyingUnits[0].TeamID != teamID)
-            {
-                encountersManager.RegisterEncounter(this, targetNode);
-                return;
-            }
-        }
-
         BuildingNodePreview currentNodePreview = battlefieldGenerator.Nodes[currentNode];
 
         currentNodePreview.SetOriginal(false);
@@ -204,45 +219,25 @@ public class UnitManager : MonoBehaviour
         targetNode = null;
     }
 
-    public void ConfirmTargetAfterEncounter()
+    private void MoveAI(BuildingNode node = null)
     {
         if (currentNode == null)
         {
-            ConfirmTargetAfterHotDrop();
-            return;    
+            matchManager.MoveAIUnit(this, aiTeam, node);
         }
 
-        BuildingNodePreview currentNodePreview = battlefieldGenerator.Nodes[currentNode];
-        BuildingNodePreview targetNodePreview = battlefieldGenerator.Nodes[targetNode];
-
-        currentNodePreview.SetOriginal(false);
-
-        targetNodePreview.RemovePreview(this);
-        targetNodePreview.MoveUnitHere(this);
-
-        previousNode = currentNode;
-        SetCurrentNode(targetNode);
-        targetNode = null;
-    }
-
-    public void SetUpForHotDrop(BuildingNode node, Transform slot)
-    {
-        targetNode = node;
-        hotDropSlot = slot;
-    }
-
-    private void ConfirmTargetAfterHotDrop()
-    {
-        if (targetNode == null || hotDropSlot == null)
+        if (targetNode == null)
         {
             return;
         }
 
-        BuildingNodePreview targetNodePreview = battlefieldGenerator.Nodes[targetNode];
-        targetNodePreview.HandleHotDrop(this, hotDropSlot);
+        previousNode = currentNode;
+
+        matchManager.MoveAIUnit(this, aiTeam, targetNode);
+
+        Debug.Log($"AI Team {teamID} moved to a node at col: {targetNode.Column}, row: {targetNode.Row}.");
 
         targetNode = null;
-        hotDropSlot = null;
     }
 
     private void CheckNode(int turn)
