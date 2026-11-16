@@ -58,6 +58,11 @@ public class DecisionManager : MonoBehaviour
 
     public void StartDecision(IReadOnlyList<UnitManager> units, BuildingNode node)
     {
+        if (isDeciding)
+        {
+            return;
+        }
+        
         decisionButton.gameObject.SetActive(true);
 
         isDeciding = true;
@@ -88,8 +93,7 @@ public class DecisionManager : MonoBehaviour
 
         foreach (BuildingNode neighbor in neighbors)
         {
-            BuildingNodePreview nodePreview 
-                = battlefieldGenerator.Nodes[neighbor];
+            BuildingNodePreview nodePreview = battlefieldGenerator.Nodes[neighbor];
 
             nodePreview.CommandColor();
             neighborsPreview.Add(nodePreview);

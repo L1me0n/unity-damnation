@@ -137,16 +137,23 @@ public class CommandMenu : MonoBehaviour
             }
 
             UnitCard unitCard = card.GetComponent<UnitCard>();
-            if (unitCard.IsSelected)
+            // if (unitCard.IsSelected)
+            // {
+            //     selectedUnits.Add(unitCard.MyUnit);
+            // }
+
+            if (unitCard.MyUnit.TargetNode != null)
             {
-                selectedUnits.Add(unitCard.MyUnit);
+                return;
             }
+
+            selectedUnits.Add(unitCard.MyUnit);
         }
 
-        if (selectedUnits.Count == 0)
-        {
-            return;
-        }
+        // if (selectedUnits.Count == 0)
+        // {
+        //     return;
+        // }
 
         OnSelectionConfirmed?.Invoke(selectedUnits, myNode);
         CloseCommandMenu();
@@ -154,6 +161,6 @@ public class CommandMenu : MonoBehaviour
 
     private void HandleButtonClicked(UnitCard card)
     {
-        card.ToggleBackground();
+        // card.ToggleBackground();
     }
 }

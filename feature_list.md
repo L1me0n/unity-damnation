@@ -595,3 +595,42 @@ All active AI nations can make weighted, information-limited whole-squad movemen
 Phase 9 Verdict:
 
 **Locked.** ✅ - 11.10.26
+
+---
+
+### Hand 2 V1 Recap: Whole-Squad Strategic Movement
+
+Goal:
+
+Complete V1 strategic movement with every surviving warrior of a nation traveling as one group. Phase 10 team separation remains deferred.
+
+Scripts Created / Edited:
+
+- CommandMenu.cs
+- DecisionMenu.cs
+- DecisionManager.cs
+
+Implemented:
+
+- Player commands include every displayed surviving unit instead of selecting individual strategic movers.
+- A group with an existing target must cancel that order before choosing another destination.
+- A second decision cannot start while destination selection is already active.
+- Cancelling a preview clears the whole group's target, including when the destination contains enemy units.
+- With no target, the group holds. AI nations continue using their Phase 9 whole-squad movement choices.
+- Unity checks passed for shared movement, cancellation and hold, cancellation followed by a new destination, duplicate-start prevention, and cancellation from an enemy-occupied target.
+
+Important Technical Note:
+
+The player interface prevents repeated target assignment through the existing preview-slot system. Future systems that set targets directly must preserve one active preview per unit.
+
+Scope Note:
+
+Phases 6–9 retain their documented prototype boundaries. The random encounter winner remains temporary until combat replaces it. Strategic splitting and regrouping from Phase 10 remain post-V1.
+
+Result:
+
+All four nations use one strategic traveling group each in V1, while individual warriors remain distinct for combat and progression.
+
+Hand 2 V1 Verdict:
+
+**Closed for V1. Phase 10 deferred.** ✅ - 11.16.26

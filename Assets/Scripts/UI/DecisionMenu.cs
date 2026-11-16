@@ -61,7 +61,7 @@ public class DecisionMenu : MonoBehaviour
 
     public void TryOpenDecisionMenu(BuildingNodePreview nodePreview)
     {
-        if (nodePreview.IsPreviewed && !(nodePreview.Node.OccupyingUnits.Count > 0) && !nodePreview.IsOriginal)
+        if (nodePreview.IsPreviewed && /* !(nodePreview.Node.OccupyingUnits.Count > 0) && */ !nodePreview.IsOriginal)
         {
             OpenDecisionMenu(nodePreview);
         }
@@ -128,16 +128,18 @@ public class DecisionMenu : MonoBehaviour
             }
 
             UnitCard unitCard = card.GetComponent<UnitCard>();
-            if (!unitCard.IsSelected)
-            {
-                selectedUnits.Add(unitCard.MyUnit);
-            }
+            // if (!unitCard.IsSelected)
+            // {
+            //     selectedUnits.Add(unitCard.MyUnit);
+            // }
+
+            selectedUnits.Add(unitCard.MyUnit);
         }
 
-        if (selectedUnits.Count == 0)
-        {
-            return;
-        }
+        // if (selectedUnits.Count == 0)
+        // {
+        //     return;
+        // }
 
         OnSelectionConfirmed?.Invoke(selectedUnits, myNode);
         CloseDecisionMenu();
@@ -145,6 +147,6 @@ public class DecisionMenu : MonoBehaviour
 
     private void HandleButtonClicked(UnitCard card)
     {
-        card.ToggleBackground();
+        // card.ToggleBackground();
     }
 }

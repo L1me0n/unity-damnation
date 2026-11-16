@@ -1,29 +1,23 @@
 # Damnation — Development Phases Hand 2
 
 > **Coverage:** Phases 6–10  
-> **Status:** APPROVED  
-> **Focus:** AI nation foundation and strategic movement decisions  
+> **Status:** APPROVED FULL-DESIGN PLAN; Phases 6–9 prototype-locked, Phase 10 deferred from V1  
+> **Focus:** AI nation foundation and whole-team V1 movement; post-V1 separation  
 > **Platform direction:** Mobile, Android-first, landscape  
 > **Engine direction:** Unity 2D
 
-This file is the authoritative production plan for the second five development phases of Damnation. It begins from the completed Hand 1 battlefield, player deployment, unit movement, central turn flow, and shrinking-zone systems.
+This file preserves the approved full-design plan for the second five development phases of Damnation. It begins from the completed Hand 1 battlefield, player deployment, unit movement, central turn flow, and shrinking-zone systems. The later V1 scope decision does not erase the Phase 10 design.
 
-Hand 2 introduces the three AI-controlled nations, the territory and match-result rules that give them objectives, the information each AI is legitimately allowed to use, and progressively more capable strategic movement decisions. It ends with AI nations that can deploy, move, split, spread, and regroup through the same simultaneous turn system as the player.
+Hand 2 introduces the three AI-controlled nations, territory and match-result rules, fair information, and strategic movement. The **full Hand 2** ends with splitting and regrouping. **V1 stops after the Phase 9 whole-squad movement foundation and adapts player commands to the same one-team, one-group constraint.** Phase 10 is deferred to a later release, not cancelled. Phases 7–9 are prototype locks with their actual implemented boundaries recorded in the current game design and feature list; broader acceptance bullets below remain full-phase targets, not retroactive claims that those prototype features shipped.
 
 Combat encounters are intentionally not implemented in this hand. Hand 2 may detect and register contested buildings or hot drops, but it must not invent temporary combat outcomes that conflict with the future encounter system.
 
-## Working Rule
+### V1 delivery checkpoint
 
-Every phase follows the same process:
-
-1. The developer describes the intended implementation approach.
-2. The approach is reviewed and corrected where necessary.
-3. The developer approves the final approach.
-4. The phase is implemented.
-5. The implementation is reviewed against its exit conditions.
-6. Required corrections are completed.
-7. Relevant documentation is updated.
-8. The phase is locked with one focused Git commit.
+- Each of four nations fields six individually tracked units; all surviving units of a nation make **one strategic travel choice together**. Do not implement player or AI separation, group composition, or speculative Phase 10 infrastructure for V1.
+- The Phase 9 prototype's seeded, fair hold-or-neighbor decision and the existing simultaneous turn pipeline supply V1's initial strategic AI. Preserve known prototype limitations and replace the temporary random encounter resolver in Hands 3–4.
+- Confirm and, where necessary, adapt existing player commands so a nation cannot split in V1. This is a V1 integration objective, not a revision of the already locked Hand 1 implementation record.
+- V1 can proceed to the combat hand without locking Phase 10 or satisfying the full Hand 2 completion condition below. Fair knowledge and hidden opponent territory totals remain mandatory; UI deferral cannot make the AI omniscient.
 
 ## Shared Hand 2 Rules
 
@@ -99,7 +93,7 @@ This phase creates the teams and units that later AI systems will control. It do
 ### Presentation and Debugging Foundation
 
 - Give every nation a distinct temporary presentation identity suitable for testing.
-- Allow developers to inspect all four rosters and their ownership assignments.
+- Provide a debug view of all four rosters and their ownership assignments.
 - Do not make debug visibility equivalent to player-visible enemy information.
 - Preserve a future visibility boundary so enemy unit views can be shown or hidden independently from their runtime existence.
 
@@ -408,7 +402,9 @@ These scenarios verify relative weighting and legality. They do not establish fi
 
 ---
 
-# Phase 10 — AI Team Separation and Coordination
+# Phase 10 — AI Team Separation and Coordination (Post-V1 Deferred)
+
+**V1 scope:** This entire phase is deferred. Keep its goals and exit conditions as the long-term target. Do not implement it or claim it locked as part of the first release. Resume its implementation after V1.
 
 ## Goal
 
@@ -523,7 +519,7 @@ The point system should make safe expansion attractive, while zone danger and cr
 
 # Phase Hand 2 Completion Condition
 
-`phases_hand_2.md` is complete when Phases 6–10 are individually reviewed, locked, and committed.
+The **full** `phases_hand_2.md` is complete when Phases 6–10 are individually reviewed, verified, and locked. V1 readiness uses the separate checkpoint above; the deferred Phase 10 remains open.
 
 At that point, the project must contain:
 
@@ -538,4 +534,4 @@ At that point, the project must contain:
 - seeded diagnostics and repeatable AI behaviour tests;
 - explicit extension points for future detection, combat, and stat-aware decisions.
 
-Hand 2 does not produce complete combat-capable opponents. It establishes the strategic AI layer that chooses where units go and how they divide. Combat encounters, Intelligence-based detection, stat-aware decisions, permanent progression, and multi-year nation systems remain for later phase hands.
+Through Phase 9, Hand 2 supplies whole-squad strategic movement for V1 but not combat-capable opponents. The full post-V1 hand later adds division and regrouping. Combat encounters, any necessary Intelligence backend, stat-aware decisions, permanent progression, and multi-year nation systems are addressed in later work at the V1 or post-V1 boundary stated in the current scope document.

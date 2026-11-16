@@ -1,29 +1,28 @@
 # Damnation — Development Phases Hand 4
 
 > **Coverage:** Phases 16–20  
-> **Status:** DRAFT FOR REVIEW  
-> **Focus:** Combat AI and complete live encounter resolution  
+> **Status:** FULL-DESIGN DRAFT FOR REVIEW; V1 integration required  
+> **Focus:** Fair combat AI and complete live encounter resolution  
 > **Platform direction:** Mobile, Android-first, landscape  
 > **Engine direction:** Unity 2D
 
-This file proposes the fourth five-phase production hand for Damnation. Hand 3 supplies a battle rules engine, a player Battle screen, a gated encounter queue, and repeatable controlled scenarios. Hand 4 replaces scripted development opponents with fair, state-based combat AI and connects both player-involved and AI-only battles to the live board.
+This file proposes the fourth five-phase full-design production hand for Damnation. Hand 3 supplies a battle rules engine, a player Battle screen, a gated encounter queue, and repeatable controlled scenarios. Hand 4 replaces scripted development opponents with fair combat AI and connects both player-involved and AI-only battles to the live board. V1 keeps each nation's surviving warriors together on the strategic board while their combat actions remain individual.
 
-The current game design defines the intended rules. The Hand 3 scenario scripts remain development fixtures; they must not become the production opponent policy or silently settle real matches. Hand 4 finishes the encounter MVP: hot drops and normal contests resolve, retreat can create later encounter steps, and the board advances only after the required battles conclude.
+The current game design defines the intended rules; `DAMNATION_V1_VERTICAL_SLICE.md` defines which full-design features belong in the first release. The Hand 3 scenario scripts remain development fixtures; they must not become the production opponent policy or silently settle real matches. Hand 4's full target includes hot drops, normal contests, retreat-generated encounter steps, and correct board advancement. The exact V1 combat and retreat subset awaits an explicit decision; every V1 encounter must nonetheless reach a valid result and never advance an unresolved board.
 
-Intelligence detection and the player Notes system are reserved for Hand 5. Hand 4 may consume legitimately available observations from existing nation knowledge, but it does not invent new scouting or reveal rules. Multi-year progression, sacrifices, Nation History, and Possession remain later work.
+The player-facing Intelligence and Notes UI is post-V1 Hand 5 work. Hand 4 consumes only legitimate observations; any knowledge backend needed for fair V1 AI may be integrated without granting hidden information or inventing reveal rules. Minimal unit-points progression, year transitions, and persistence follow live combat as later V1 milestones. Full Nation History presentation and Possession are outside this hand.
 
-## Working Rule
+### V1 delivery mapping
 
-Every phase follows the same process:
+| Phase | V1 treatment |
+|---|---|
+| 16 — Legal combat decisions | Required for every action included in the explicitly chosen V1 combat minimum; the same resolver must serve player and AI. |
+| 17 — State-based AI | Required at a sufficient level to make legal, fair, playable choices; exhaustive utility polish and final weighting can follow after V1. |
+| 18 — AI-only battles and retreat | Fast, out-of-view AI-only resolution is required. Retreat policy and volley/chain work follow the explicit V1 combat-minimum decision; full-design rules remain recorded below. |
+| 19 — Live encounter entry | Required: hot drops and normal player/AI contests must enter and finish Battles with no placeholder winner. |
+| 20 — Board-turn completion | Required: authoritative occupancy, capture, zone/recovery, and one-time match-end scoring. Retreat chains are a V1 gate if retreat is included. |
 
-1. The developer describes the intended implementation approach.
-2. The approach is reviewed and corrected where necessary.
-3. The developer approves the final approach.
-4. The phase is implemented.
-5. The implementation is reviewed against its exit conditions.
-6. Required corrections are completed.
-7. Relevant documentation is updated.
-8. The phase is locked with one focused Git commit.
+The full exit conditions below remain the long-term target. Reaching a smaller V1 checkpoint never implies that excluded full-design behavior was implemented or verified.
 
 ## Shared Hand 4 Rules
 
@@ -347,7 +346,7 @@ This phase completes the first full match loop with fair combat AI and off-scree
 
 # Phase Hand 4 Completion Condition
 
-phases_hand_4.md is complete when Phases 16–20 are individually reviewed, locked, and committed.
+The **full** phases_hand_4.md is complete when Phases 16–20 meet their full exit conditions and are reviewed, verified, and locked. V1 completion is checked separately against the explicit combat minimum and the playable end-to-end match loop.
 
 At that point, the project must contain:
 
@@ -359,4 +358,4 @@ At that point, the project must contain:
 - correct authoritative occupancy, contested capture, scaled zone damage, recovery, Bleeding cleanup, and match-end scoring;
 - repeatable controlled tests and an Android landscape deployment-to-result playthrough.
 
-Hand 5 will develop Intelligence and player Notes. Persistent multi-year progression and Possession remain later scope.
+Hand 5 preserves the full Intelligence and player Notes plan for after V1. Fair nation knowledge remains necessary for V1. Minimal multi-year progression and persistence are later V1 milestones; Possession remains post-V1.

@@ -1,27 +1,25 @@
 # Damnation — Development Phases Hand 5
 
 > **Coverage:** Phases 21–25  
-> **Status:** DRAFT FOR REVIEW  
-> **Focus:** Fair scouting, historical enemy information, ownership visibility, and player Notes  
+> **Status:** POST-V1 FULL-DESIGN DRAFT; V1 fair-knowledge dependencies only  
+> **Focus:** Full scouting, historical enemy information, ownership visibility, and player Notes  
 > **Platform direction:** Mobile, Android-first, landscape  
 > **Engine direction:** Unity 2D
 
-This file proposes the fifth five-phase production hand for Damnation. It follows the live encounter and board-turn loop planned in Hands 3–4. Its goal is to make Intelligence a real stat, present learned information without revealing hidden changes, and give the player a separate way to record guesses and Battle observations.
+This file preserves the fifth five-phase **post-V1** full-design hand for Damnation. It follows the live encounter and board-turn loop planned in Hands 3–4. Its full target makes Intelligence a visible, useful stat, presents learned information without revealing hidden changes, and gives the player a separate way to record guesses and Battle observations. V1 defers the player-facing Intelligence and Notes UI while preserving necessary fair-information backend.
 
-The current game design defines intended rules. Hands 3–4 are draft development plans, and Hand 2 implementation is still underway; this plan describes a future hand rather than claiming those dependencies are already complete. Where earlier prototypes or phase plans show public enemy territory totals, live enemy ownership behind a known-node flag, or a different Intelligence probability, follow the current game design and record the required change. Hand 5 does not add a new source of free information after an unfinished Battle.
+The current game design defines intended rules; `DAMNATION_V1_VERTICAL_SLICE.md` defines the first-release boundary. Hand 2 Phases 6–9 are prototype-locked, Phase 10 is deferred, and Hands 3–4 are draft plans. Where earlier prototypes or phase plans show public enemy territory totals, live enemy ownership behind a known-node flag, or a different Intelligence probability, follow the current game design and record the required change. Hand 5 does not add a new source of free information after an unfinished Battle.
 
-## Working Rule
+### V1 dependency and deferral map
 
-Every phase follows the same process:
+| Full-design phase | V1 treatment |
+|---|---|
+| 21 — Knowledge and ownership visibility | Keep each AI's legitimate observations separate and hide its live opponent information. If a retained owner flag or HUD would leak unseen ownership or territory, fix that leak as a **V1 correctness objective** without implementing the entire Hand 5 UI. |
+| 22 — Intelligence scouting | The complete backend is deferred unless required by the chosen V1 progression/AI scope. Before allowing players to invest in Intelligence in V1, decide what meaningful, understandable effect that investment has without the deferred player-facing badge UI. |
+| 23–24 — Learned badges and editable Notes | Player-facing scouting badges, last-known overlays beyond the minimum fair view, and manual Notes are **post-V1**. No V1 delivery gate may claim these phases Complete. |
+| 25 — Full knowledge integration | Its complete scouting/Notes verification is post-V1. V1 must still test its own AI knowledge boundary and lack of hidden-information leaks. |
 
-1. The developer describes the intended implementation approach.
-2. The approach is reviewed and corrected where necessary.
-3. The developer approves the final approach.
-4. The phase is implemented.
-5. The implementation is reviewed against its exit conditions.
-6. Required corrections are completed.
-7. Relevant documentation is updated.
-8. The phase is locked with one focused Git commit.
+Do not add an AI-only scouting advantage merely because the player's badge UI is deferred. Any V1 backend subset requires an explicit rule and scope decision at the point of implementation; preserve the full detection and presentation truths below for later versions.
 
 ## Shared Hand 5 Rules
 
@@ -304,7 +302,7 @@ This phase closes the Hand 5 loop across deployment, turn entry, encounter chain
 
 # Phase Hand 5 Completion Condition
 
-phases_hand_5.md is complete when Phases 21–25 are individually reviewed, locked, and committed.
+The **full** phases_hand_5.md is complete when Phases 21–25 meet their full exit conditions and are reviewed, verified, and locked after V1. Necessary fair-information fixes extracted into V1 do not mark this hand Complete.
 
 At that point, the project must contain:
 
@@ -315,4 +313,4 @@ At that point, the project must contain:
 - editable player Notes that cannot disclose hidden occupancy or contaminate AI knowledge;
 - a verified deployment-to-result board loop that keeps scouting, encounters, ownership, and information boundaries in order.
 
-Multi-year progression, Nation History, and Possession remain outside this hand.
+Minimal multi-year progression and persistence are V1 work in a later plan, outside this post-V1 hand. Full Nation History presentation and Possession also remain outside this hand unless separately scoped.

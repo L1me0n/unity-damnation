@@ -1,29 +1,27 @@
 # Damnation — Development Phases Hand 3
 
 > **Coverage:** Phases 11–15  
-> **Status:** DRAFT FOR REVIEW  
-> **Focus:** Combat rules and a controlled, playable player Battle prototype  
+> **Status:** FULL-DESIGN DRAFT FOR REVIEW; V1 subset pending combat-minimum decision  
+> **Focus:** Encounter gate, combat rules, and a controlled player Battle prototype  
 > **Platform direction:** Mobile, Android-first, landscape  
 > **Engine direction:** Unity 2D
 
-This file proposes the third five-phase production hand for Damnation. It begins from the four-nation board, simultaneous movement, encounter registration, ownership, scoring, zone, and strategic AI work of Hands 1–2. Its goal is to establish the encounter gate, implement combat rules, and make player Battles playable in controlled scenarios.
+This file proposes the third five-phase full-design production hand for Damnation. It begins from the four-nation board, simultaneous movement, encounter registration, ownership, scoring, zone, and **Phase 9 whole-squad** strategic AI work. Phase 10 separation is deferred from V1. Hand 3 establishes the encounter gate and combat rules and makes controlled player Battles playable. Keep individual warriors in Battle even though their six-member nation travels as one strategic group in V1.
 
 The current game design defines intended rules. Where an older phase document or temporary prototype behavior disagrees, follow the current game design and record the implementation change. In particular, the **sole highest final match score** wins the year; a highest-score tie has no winner. First survival finish alone does not determine the yearly winner.
 
-Hand 3 does **not** claim that a live match can yet resolve its encounters and advance the board. Controlled opponents follow explicit scenario scripts, not combat AI. Hand 4 adds state-based combat AI, fast AI-only simulation, retreat-chain scheduling, and complete live encounter integration. Intelligence and player Notes follow in Hand 5. Multi-year progression and Possession remain later scope.
+Hand 3 does **not** claim that a live match can yet resolve its encounters and advance the board. Controlled opponents follow explicit scenario scripts, not combat AI. Hand 4 adds fair combat AI, fast AI-only simulation, and live encounter integration. The full Hand 5 player-facing Intelligence and Notes work is after V1; only necessary fair-knowledge backend is part of V1. Minimal multi-year progression and persistence are later **V1** milestones; Possession remains post-V1 inspiration.
 
-## Working Rule
+### V1 delivery mapping
 
-Every phase follows the same process:
+| Phase | V1 treatment |
+|---|---|
+| 11 — Encounter queue and board pause | Required for real hot drops and contested movement. Implement and verify one small objective at a time. |
+| 12–13 — Combat rules | Preserve the full four-weapon and retreat truths below. The smallest representative V1 set of existing actions, weapons, and interactions must be decided explicitly before narrowing implementation. A neutral resolver, correct outcomes, and individually tracked warriors are required. |
+| 14 — Battle screen | Require understandable legal choices, turn order, timed-decision outcomes for included actions, and clear result feedback. Elaborate movement, projectile, and other nonessential animations are full-design targets, not automatic V1 gates. |
+| 15 — Prototype and recovery | Require a reliable handoff to live combat, proportional zone damage, and stationary recovery where applicable. Scripted opponent fixtures cannot settle production encounters. |
 
-1. The developer describes the intended implementation approach.
-2. The approach is reviewed and corrected where necessary.
-3. The developer approves the final approach.
-4. The phase is implemented.
-5. The implementation is reviewed against its exit conditions.
-6. Required corrections are completed.
-7. Relevant documentation is updated.
-8. The phase is locked with one focused Git commit.
+These phase descriptions and exit conditions retain the complete design. Passing a narrower V1 checkpoint does not mark a deferred full-phase target Complete. Until the V1 combat minimum is agreed, start with the independent Phase 11 encounter boundary and do not silently select or omit weapons or retreat.
 
 ## Shared Hand 3 Rules
 
@@ -400,7 +398,7 @@ This phase does not use scripted opponents to settle live matches. The productio
 
 # Phase Hand 3 Completion Condition
 
-phases_hand_3.md is complete when Phases 11–15 are individually reviewed, locked, and committed.
+The **full** phases_hand_3.md is complete when Phases 11–15 meet their full exit conditions and are reviewed, verified, and locked. A narrower V1 combat checkpoint may be reached first under the explicit V1 scope decision without marking deferred presentation or combat targets Complete.
 
 At that point, the project must contain:
 
