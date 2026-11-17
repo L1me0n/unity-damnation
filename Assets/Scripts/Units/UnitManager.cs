@@ -156,17 +156,30 @@ public class UnitManager : MonoBehaviour
 
     public void SetTargetNode(BuildingNode node)
     {
-        targetNode = node;
+        if (node != null)
+        {
+            targetNode = node;
+        }
 
         if (teamID != 0)
         {
             return;
         }
 
-        BuildingNodePreview targetNodePreview = battlefieldGenerator.Nodes[targetNode];
-        BuildingNodePreview currentNodePreview = battlefieldGenerator.Nodes[currentNode];
+        if (node == null)
+        {
+            return;
+        }
 
-        currentNodePreview.TempRemove(this);
+        BuildingNodePreview targetNodePreview = battlefieldGenerator.Nodes[targetNode];
+
+        if (currentNode != null)
+        {
+            BuildingNodePreview currentNodePreview = battlefieldGenerator.Nodes[currentNode];
+
+            currentNodePreview.TempRemove(this);
+        }
+        
         targetNodePreview.PreviewMove(this);
     }
     public void CancelTargetNode(BuildingNode node)
@@ -188,6 +201,10 @@ public class UnitManager : MonoBehaviour
 
     public void Move(BuildingNode node = null)
     {
+        node = node == null ? targetNode : node;
+
+        BuildingNodePreview targetNodePreview;
+
         if (teamID != 0)
         {
             MoveAI(node);
@@ -197,6 +214,9 @@ public class UnitManager : MonoBehaviour
         if (currentNode == null)
         {
             ConfirmTargetAfterDeployment(node);
+            targetNodePreview = battlefieldGenerator.Nodes[targetNode];
+            targetNodePreview.RemovePreview(this);
+            targetNode = null;
             return;    
         }
 
@@ -209,7 +229,7 @@ public class UnitManager : MonoBehaviour
 
         currentNodePreview.SetOriginal(false);
 
-        BuildingNodePreview targetNodePreview = battlefieldGenerator.Nodes[targetNode];
+        targetNodePreview = battlefieldGenerator.Nodes[targetNode];
 
         targetNodePreview.RemovePreview(this);
         targetNodePreview.MoveUnitHere(this);
@@ -221,9 +241,13 @@ public class UnitManager : MonoBehaviour
 
     private void MoveAI(BuildingNode node = null)
     {
+        node = node == null ? targetNode : node;
+
         if (currentNode == null)
         {
             matchManager.MoveAIUnit(this, aiTeam, node);
+            targetNode = null;
+            return;
         }
 
         if (targetNode == null)

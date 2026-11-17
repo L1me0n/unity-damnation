@@ -62,6 +62,11 @@ public class DeploymentPositions : MonoBehaviour
             BuildingNode node = matchManager.DeploymentPositions[i];
             if (node != null)
             {
+                if (node.OccupyingUnits[0].TeamID == 0)
+                {
+                    continue;
+                }
+
                 if (playerObservations.ContainsKey(node))
                 {
                     GameObject existingObservation = playerObservations[node];

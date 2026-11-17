@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
-using Random = UnityEngine.Random; // TODO: remove this
+using System;
+using Random = UnityEngine.Random;
 
 public class EncountersManager : MonoBehaviour
 {
@@ -35,8 +36,12 @@ public class EncountersManager : MonoBehaviour
     [SerializeField] private TurnOrchestrator turnOrchestrator;
     [SerializeField] private MatchManager matchManager;
 
-    List<Encounter> encounters = new List<Encounter>();
+    Queue<Encounter> encounters = new Queue<Encounter>();
     Dictionary<BuildingNode, Encounter> encounterNodes = new Dictionary<BuildingNode, Encounter>();
+
+    public bool IsQueueEmpty => encounters.Count == 0;
+
+    public event Action<int> OnEncountersResolved;
 
     private void Awake()
     {
@@ -68,59 +73,51 @@ public class EncountersManager : MonoBehaviour
                 node
             );
 
-            encounters.Add(encounter);
+            encounters.Enqueue(encounter);
             encounterNodes[node] = encounter;
         }
     }
 
-    public void ResolveEncounters()
+    // TODO 
+    // Dequeue encounters and either rapidly resolve ai to ai encounters
+    // Or set up player to ai encounter scene
+    // Make an event of EncountersResolved, when the queue is emptied. 
+    // This will allow Turn Orchestrator to move further the turn resolution
+    // Or end the turn after hot drops resolved 
+    public void ResolveEncounters(int turn)
     {
-        foreach (Encounter encounter in encounters)
+        while (encounters.Count > 0)
         {
-            List<int> teamIds = new List<int>();
-            foreach (int id in encounter.teams.Keys)
-            {
-                teamIds.Add(id);
-            }
-
-            int winner = Random.Range(0, teamIds.Count);
-
-            List<UnitManager> losers = new List<UnitManager>();
-            List<UnitManager> winners = new List<UnitManager>();
-            List<UnitManager> participatedTeams = new List<UnitManager>();
-
-            foreach (var pair in encounter.teams)
-            {
-                foreach (UnitManager unit in pair.Value)
+            Encounter currentEncounter = encounters.Dequeue();
+            encounterNodes.Remove(currentEncounter.node);
+            /* if (!currentEncounter.teams.ContainsKey(0))
+            { */
+                List<int> teamIds = new List<int>();
+                foreach (int id in currentEncounter.teams.Keys)
                 {
-                    participatedTeams.Add(unit);
+                    teamIds.Add(id);
                 }
-            }
 
-            foreach (UnitManager unit in participatedTeams)
-            {
-                if (unit.TeamID == teamIds[winner])
+                int roll = Random.Range(0, teamIds.Count);
+
+                int winnerTeam = teamIds[roll];
+
+                List<int> loserTeams = new List<int>();
+
+                foreach (int team in teamIds)
                 {
-                    winners.Add(unit);
-                }
-                else
-                {
-                    losers.Add(unit);
-                }
-            }
+                    if (team == winnerTeam)
+                    {
+                        continue;
+                    }
 
-            encounter.node.SetOwnerTeam(teamIds[winner]);;
-            matchManager.MoveWinner(encounter.node, winners, losers);
+                    loserTeams.Add(team);
+                }
 
-            if (matchManager.IsEndable)
-            {
-                encounters.Clear();
-                encounterNodes.Clear();
-                return;
-            }
+                matchManager.MoveWinner(currentEncounter.node, winnerTeam, loserTeams);
+            /* } */
         }
 
-        encounters.Clear();
-        encounterNodes.Clear();
+        OnEncountersResolved?.Invoke(turn);
     }
 }

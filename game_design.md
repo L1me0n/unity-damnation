@@ -117,7 +117,7 @@ At match end, snapshot every building's authoritative owner. **One owned buildin
 ### Match end and survival finish — Decided; prototype ordering specified
 
 - A nation is eliminated from the current match when no units survive. It stops planning, moving, and capturing.
-- Record elimination order. The match ends when the player's nation is eliminated or all three AI nations have been eliminated. The prototype completes the current encounter or zone-damage event invocation, then refreshes ownership, territory points, and HUD before calculating the result; it skips later stages of that turn. Pending encounters later in the encounter list are not resolved after the match becomes endable.
+- Record elimination order. The match becomes endable when the player's nation is eliminated or all three AI nations have been eliminated. In the temporary random-resolver prototype, finish every encounter already registered for the current turn, including AI-only encounters queued after the player's elimination. Then place the survivors, refresh ownership, territory points, and HUD, and calculate the result once; skip later zone and turn stages. An elimination during zone damage completes that damage invocation before the same ownership, points, HUD, and result sequence. This prototype ordering deliberately differs from the full-combat boundary below and must be revisited when live Battles and retreat chains are integrated.
 - In full combat, if the player's last unit dies in a Battle, finish that entire Battle before scoring, including any AI-only remainder. Then finalize the match; do not play another registered Battle or a new encounter caused by retreat from the final Battle. Capture and territory at scoring reflect only events that actually finished.
 - Assign a **survival finish** from fourth to first. If the player is eliminated while AI nations remain, its finish is locked and the surviving AI nations are ordered by surviving-unit count. Equal surviving-unit counts are broken randomly; the current prototype initializes Unity's random source from a serialized, logged match seed before deployment, so identical play sequences can be replayed with the same seed.
 - When the player is the last surviving nation, it receives first survival finish. Multiple eliminations during one zone step take their existing death-callback order. Future combat will apply its actual elimination order. No separate simultaneous-elimination rule is required for the Phase 7 prototype.
@@ -230,13 +230,14 @@ The older backlog and short README describe account XP and levels as the primary
 
 ## 11. Player experience and presentation
 
-### Current prototype — Implemented through Phase 9
+### Current prototype — Implemented through Phase 11
 
 - A generated 8×8 board with mobile tap, pan, zoom, and bounded camera movement.
 - Two disabled deployment lines, player drop confirmation, six player units, a central registry, and three initialized AI rosters.
 - Player command and decision menus with adjacent legal highlights, ghost previews, cancellation, and turn confirmation. Phase 3 originally allowed per-unit selection; the V1 adaptation orders and cancels the surviving player group together.
 - A five-stage shrinking-zone backend with warning borders, danger nodes, damage, stage HUD, and blocking transition messages.
 - Independent legal AI deployment, shared-drop encounter registration, and temporary random encounter results. The player sees colored count badges for all enemy deployment buildings, with multiple badges on shared buildings. Badges hide on the next turn or when the player wins on that building.
+- Phase 11 groups hot drops and simultaneous movement clashes into per-building encounters, resolves the queue with temporary random winners before committing survivors, and resumes the ordered board sequence. Player deployment and movement previews are removed on placement; AI initial placement clears its target. The random winner is not a combat rule.
 - AI-specific historical deployment sightings and own-territory tracking, with observation structures prepared for intelligence and encounter information. AI units receive node-safety-based zone damage. Whole-squad AI movement now samples weighted hold or adjacent moves from zone safety, its own territory, and its latest unsuperseded enemy observations. Team separation remains for Phase 10.
 - An inspector-set match seed initializes Unity's random source before deployment and is logged. Movement diagnostics log each candidate's component scores and final weight, the random roll, and the selected building.
 - Persistent building ownership, current territory counts, an ownership flag toggle, elimination placements, survival bonuses, final-score calculation, and a basic winner/tie message.
@@ -260,6 +261,12 @@ The serialized match seed is applied at match start before deployment. Logs reco
 Every surviving player warrior travels as one strategic group, matching Phase 9 AI movement without implementing Phase 10. `CommandMenu` includes every active unit card in a command and rejects a new command while a member already has a target. `DecisionManager` rejects a duplicate start during destination selection. `DecisionMenu` cancels all previewed player units together, including when the target building is occupied by an enemy. Cancelling clears the group's target and preview before another destination is chosen; with no target, the group holds. The full-design ability to select smaller strategic groups remains deferred rather than removed from the rules.
 
 The shared-move, cancellation and hold, cancellation and reissue, duplicate-start, and enemy-occupied-target cancellation paths were checked in Unity. The random encounter winner remains temporary for Hands 3–4, and Phase 10 remains post-V1.
+
+### Phase 11 lock — Prototype scope
+
+Contested hot drops and normal-turn destinations register participants by building. The temporary seeded random resolver drains the encounters already registered for the turn, even if the player is eliminated in an earlier one. Losing squads are removed, then survivors move once into authoritative occupancy; ownership, territory points, HUD, and final scoring follow the completed encounter results. A player-won hot drop removes the deployment badge for that building; badges for AI-only shared drops continue to show historical drop positions rather than their hidden outcomes. The player group's deployment and movement previews are cleared when placement resolves, and initial AI placement does not repeat or retain its target.
+
+Encounters, movement, and hot drops were checked in Unity. This lock covers board resolution through the temporary random resolver. The full Phase 11 pause, encounter-step state, player notification and selection, removal of random outcomes, real Battle results, and retreat chaining remain open under the Hand 3 plan. The live-combat terminal ordering must be settled when those systems are integrated.
 
 ### Player Battle screen — Full-design Hand 3 target; V1 clarity required
 

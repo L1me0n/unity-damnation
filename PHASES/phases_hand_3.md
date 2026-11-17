@@ -1,7 +1,7 @@
 # Damnation — Development Phases Hand 3
 
 > **Coverage:** Phases 11–15  
-> **Status:** FULL-DESIGN DRAFT FOR REVIEW; V1 subset pending combat-minimum decision  
+> **Status:** FULL-DESIGN DRAFT FOR REVIEW; Phase 11 prototype locked; V1 combat minimum pending  
 > **Focus:** Encounter gate, combat rules, and a controlled player Battle prototype  
 > **Platform direction:** Mobile, Android-first, landscape  
 > **Engine direction:** Unity 2D
@@ -10,7 +10,7 @@ This file proposes the third five-phase full-design production hand for Damnatio
 
 The current game design defines intended rules. Where an older phase document or temporary prototype behavior disagrees, follow the current game design and record the implementation change. In particular, the **sole highest final match score** wins the year; a highest-score tie has no winner. First survival finish alone does not determine the yearly winner.
 
-Hand 3 does **not** claim that a live match can yet resolve its encounters and advance the board. Controlled opponents follow explicit scenario scripts, not combat AI. Hand 4 adds fair combat AI, fast AI-only simulation, and live encounter integration. The full Hand 5 player-facing Intelligence and Notes work is after V1; only necessary fair-knowledge backend is part of V1. Minimal multi-year progression and persistence are later **V1** milestones; Possession remains post-V1 inspiration.
+The full-design Hand 3 encounter path still awaits combat results. Controlled opponents follow explicit scenario scripts, not combat AI. The current board prototype uses temporary random encounter outcomes to keep turns playable while combat is built. Hand 4 adds fair combat AI, fast AI-only simulation, and live encounter integration. The full Hand 5 player-facing Intelligence and Notes work is after V1; only necessary fair-knowledge backend is part of V1. Minimal multi-year progression and persistence are later **V1** milestones; Possession remains post-V1 inspiration.
 
 ### V1 delivery mapping
 
@@ -22,6 +22,14 @@ Hand 3 does **not** claim that a live match can yet resolve its encounters and a
 | 15 — Prototype and recovery | Require a reliable handoff to live combat, proportional zone damage, and stationary recovery where applicable. Scripted opponent fixtures cannot settle production encounters. |
 
 These phase descriptions and exit conditions retain the complete design. Passing a narrower V1 checkpoint does not mark a deferred full-phase target Complete. Until the V1 combat minimum is agreed, start with the independent Phase 11 encounter boundary and do not silently select or omit weapons or retreat.
+
+### Phase 11 lock — Prototype scope
+
+Contested hot drops and simultaneous movement destinations form encounters by building. The temporary seeded resolver chooses a random winning nation for each, eliminates losing squads, and places survivors before ownership, zone damage, and scoring. Player placement and movement remove their destination ghosts; initial AI placement clears its target. Hot drops, movement, and encounters were checked in Unity.
+
+Every encounter registered for the turn finishes before movement, ownership, and final scoring, even if an earlier encounter eliminates the player. The results of all committed encounters therefore contribute to the same turn's final state. This temporary ordering differs from the full-combat terminal Battle rule; live Battles and retreat chains need their own sequencing decision during integration.
+
+The full Phase 11 encounter pause, step state, player encounter selection, and removal of random outcomes remain open under the exit conditions below.
 
 ## Shared Hand 3 Rules
 
@@ -46,7 +54,7 @@ These phase descriptions and exit conditions retain the complete design. Passing
 
 ### Phase Boundary Discipline
 
-A phase may expose controlled development scenarios before its player-facing integration is ready. It must not reinstate the Phase 8 temporary random winner, silently settle an AI-only encounter with a script, or advance the board past an unresolved encounter just to keep the prototype running.
+A phase may expose controlled development scenarios before its player-facing integration is ready. The explicitly limited Phase 11 checkpoint above may retain the Phase 8 temporary random winner for integration testing, but this does not satisfy the full encounter-pause exit conditions. A full-design phase must not silently settle an AI-only encounter with a script or advance the board past an unresolved encounter just to keep the prototype running.
 
 Numerical balance values, the exact attack and defense timer seconds, and the activation reel's visible width can be adjusted during implementation review and mobile playtesting without changing the decided rules. Combat AI weights, AI-only simulation, live queue completion, final art, audio, permanent progression, Intelligence, Notes UI, and Possession are not acceptance requirements for this hand.
 

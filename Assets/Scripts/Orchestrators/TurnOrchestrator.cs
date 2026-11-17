@@ -71,6 +71,10 @@ public class TurnOrchestrator : MonoBehaviour
         MakeAIMoveDecisions?.Invoke(turn);
 
         ResolveEncounters?.Invoke(turn);
+    }
+
+    public void OrchestrateAfterEncounters(int turn)
+    {
         if (matchManager.IsEndable)
         {
             CheckOwners?.Invoke(turn);

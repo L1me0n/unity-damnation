@@ -5,3 +5,12 @@ Clicking on "Competitive": same as clicking on "Fight", but before immediately g
 Clicking on "Tips": will show list of buttons with titles describing game mechanics. Clicking on each opens up menu with description of the mechanic for players. At the open of this menu for the first time, one of such mechanic menus appears immediately, saying that all menus in the game can be swiped down, and sometimes swiped up, explaining what each does, and saying try to close this menu with swipe down. After closing it, it won't appear again, and player can browse through the tips, closing them with swipe down. The same right-arrow button appears here to exit to the main menu.
 Clicking on "Exit": exits the game.
 "Encounter": TBD
+
+
+MatchManager.Start -> MatchManager.BeginMatch -> DeploymentSelection.BeginDeployment -> DeploymentSelection.SelectNode -> DeploymentSelection.RequestConfirmation -> ConfirmationMenu.AddConfirmListener -> DeploymentSelection.ConfirmSelection -> DeploymentSelection.FinishDeployment -> BuildingNodePreview.SpawnUnits -> MatchManager.RecordDeploymentPositions -> MatchManager.ResolveHotDrops -> UnitManager.SetTargetNode -> 
+If NOT hot drop: MatchManager.FinishEncounter -> UnitManager.Move -> UnitManager.ConfirmTargetAfterDeployment -> TurnManager.EndTurn -> CommandMenu.OpenCommandMenu -> CommandMenu.ConfirmCommand -> DecisionManager.StartDecision -> DecisionManager.ConfirmDecision -> 
+
+
+
+If hot drop:
+

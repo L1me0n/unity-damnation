@@ -68,9 +68,12 @@ public class OwnershipChecker : MonoBehaviour
             return;
         }
 
+        // TODO
+        // Delete the comments
+        // Commented out for now for testing
         foreach(var (node, nodePreview) in battlefieldGenerator.Nodes)
         {
-            if (node.OwnerTeam == 0 || (knownNodes.Contains(node) && node.OwnerTeam > 0))
+            if (node.OwnerTeam == 0 || (/*knownNodes.Contains(node) &&*/ node.OwnerTeam > 0))
             {
                 nodePreview.ToggleOwnershipFlag(true);
             }

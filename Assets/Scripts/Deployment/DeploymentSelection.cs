@@ -10,7 +10,6 @@ public class DeploymentSelection : MonoBehaviour
     [SerializeField] private BattlefieldGenerator battlefieldGenerator;
     [SerializeField] private NodeInteraction nodeInteraction;
     [SerializeField] private ConfirmationMenu confirmationMenu;
-    [SerializeField] private TurnManager turnManager;
     [SerializeField] private MatchManager matchManager;
 
     private int[] randomLineType = new int[2]; // 0 - row, 1 - column
@@ -56,11 +55,6 @@ public class DeploymentSelection : MonoBehaviour
         if (confirmationMenu == null)
         {
             confirmationMenu = FindObjectOfType<ConfirmationMenu>(); 
-        }
-
-        if (turnManager == null)
-        {
-            turnManager = FindObjectOfType<TurnManager>();
         }
 
         if (matchManager == null)
@@ -225,7 +219,5 @@ public class DeploymentSelection : MonoBehaviour
         nodePreview.SpawnUnits(0); // player team is 0
 
         matchManager.RecordDeploymentPositions(confirmedNode, 0); // player team is 0
-
-        turnManager.EndTurn();
     }
 }

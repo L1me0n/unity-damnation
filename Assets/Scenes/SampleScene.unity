@@ -3116,6 +3116,8 @@ MonoBehaviour:
   deploymentSelection: {fileID: 0}
   encountersManager: {fileID: 0}
   turnOrchestrator: {fileID: 0}
+  deploymentPositionsInformation: {fileID: 0}
+  turnManager: {fileID: 0}
   maxTeams: 4
   allUnits: []
   aliveUnits: 000000000000000000000000000000000000000000000000
@@ -3124,6 +3126,7 @@ MonoBehaviour:
   survivalPoints: 
   positions: 
   survivalPool: 05000000020000000100000000000000
+  matchSeed: 123
 --- !u!4 &423990792
 Transform:
   m_ObjectHideFlags: 0
@@ -7425,7 +7428,6 @@ MonoBehaviour:
   battlefieldGenerator: {fileID: 1138020295}
   nodeInteraction: {fileID: 201486085}
   confirmationMenu: {fileID: 0}
-  turnManager: {fileID: 0}
   matchManager: {fileID: 0}
 --- !u!4 &1099454106
 Transform:

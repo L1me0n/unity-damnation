@@ -142,7 +142,7 @@ public class AITeam : MonoBehaviour
     }
 
     private void ConfirmDeployment(BuildingNode node)
-    {
+    {   
         matchManager.RecordDeploymentPositions(node, teamId);
     }
 

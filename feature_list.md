@@ -634,3 +634,49 @@ All four nations use one strategic traveling group each in V1, while individual 
 Hand 2 V1 Verdict:
 
 **Closed for V1. Phase 10 deferred.** ✅ - 11.16.26
+
+---
+
+### Phase 11 Recap: Encounter Queue and Board Resolution
+
+Goal:
+
+Resolve contested hot drops and movement destinations before the board advances, using temporary encounter outcomes while combat is deferred.
+
+Scripts Created / Edited:
+
+- AITeam.cs
+- DeploymentSelection.cs
+- DeploymentPositions.cs
+- DecisionMenu.cs
+- EncountersManager.cs
+- MatchManager.cs
+- TurnOrchestrator.cs
+- UnitManager.cs
+- OwnershipChecker.cs
+
+Implemented:
+
+- Shared deployment buildings and contested movement destinations register encounters by building and participating nation.
+- Encounters resolve in queue order with a temporary random winner. Losing units are removed before surviving units move into authoritative occupancy.
+- All encounters registered for the turn resolve before ownership, territory points, and final scoring, including when an earlier encounter eliminates the player.
+- Uncontested units and encounter winners complete their movement after the queue empties. Turn 0 then advances to Turn 1; later turns resume the ordered board sequence.
+- Player deployment and movement remove destination ghosts and clear resolved targets. Initial AI placement runs once and clears its target.
+- Deployment badges show AI starting positions. AI-only hot-drop outcomes do not alter those historical badges, while a player-won hot drop suppresses the badge on that building.
+- Encounters, movement, and hot drops were checked in Unity.
+
+Important Technical Note:
+
+The encounter roll uses the match's seeded Unity random sequence. Winners retain their existing destination orders; encounter resolution removes losers, and movement commits the survivors after the queue is empty.
+
+Scope Note:
+
+Random winners remain a temporary board-integration rule until combat is connected. The full encounter pause, encounter steps, player encounter selection, Battle results, and retreat chains remain under the Hand 3 plan. Phase 10 team separation remains deferred from V1.
+
+Result:
+
+Hot drops and contested movement now finish through the encounter queue, after which occupancy, ownership, points, and match results reflect the completed turn.
+
+Phase 11 Verdict:
+
+**Locked.** ✅ - 11.17.26

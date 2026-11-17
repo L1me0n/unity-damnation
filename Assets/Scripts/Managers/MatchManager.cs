@@ -12,6 +12,7 @@ public class MatchManager : MonoBehaviour
     [SerializeField] private EncountersManager encountersManager;
     [SerializeField] private TurnOrchestrator turnOrchestrator;
     [SerializeField] private DeploymentPositions deploymentPositionsInformation;
+    [SerializeField] private TurnManager turnManager;
 
     [Header("Units")]
     [SerializeField] private int maxTeams = 4;
@@ -58,12 +59,14 @@ public class MatchManager : MonoBehaviour
     {
         turnOrchestrator.ResolveEncounters += ResolveEncounters;
         turnOrchestrator.CheckEnd += EndMatch;
+        encountersManager.OnEncountersResolved += HandleEncountersResolved;
     }
 
     private void OnDisable()
     {
         turnOrchestrator.ResolveEncounters -= ResolveEncounters;
         turnOrchestrator.CheckEnd -= EndMatch;
+        encountersManager.OnEncountersResolved -= HandleEncountersResolved;
 
         foreach (UnitManager unit in allUnits)
         {
@@ -93,6 +96,11 @@ public class MatchManager : MonoBehaviour
         if (deploymentPositionsInformation == null)
         {
             deploymentPositionsInformation = FindObjectOfType<DeploymentPositions>();
+        }
+
+        if (turnManager == null)
+        {
+            turnManager = FindObjectOfType<TurnManager>();
         }
 
         for (int i = 0; i < maxTeams; i++)
@@ -226,15 +234,18 @@ public class MatchManager : MonoBehaviour
             freeTeams.Add(pair.Value);
         }
 
-        encountersManager.ResolveEncounters();
-
         foreach (UnitManager unit in allUnits)
         {
-            if (freeTeams.Contains(unit.TeamID))
-            {
-                unit.Move(deploymentPositions[unit.TeamID]);
-            }
+            unit.SetTargetNode(deploymentPositions[unit.TeamID]);
         }
+
+        if (encountersManager.IsQueueEmpty)
+        {
+            FinishEncounters(0);
+            return;
+        }
+
+        encountersManager.ResolveEncounters(0);
     }
 
     private void ResolveEncounters(int turn)
@@ -287,11 +298,39 @@ public class MatchManager : MonoBehaviour
             }
         }
 
-        encountersManager.ResolveEncounters();
-
         foreach (UnitManager unit in freeUnits)
         {
+            unit.SetTargetNode(null);
+        }
+
+        if (encountersManager.IsQueueEmpty)
+        {
+            FinishEncounters(turn);
+            return;
+        }
+
+        encountersManager.ResolveEncounters(turn);
+    }
+
+    private void HandleEncountersResolved(int turn)
+    {
+        ResolveEncounters(turn);
+    }
+
+    public void FinishEncounters(int turn)
+    {
+        foreach(UnitManager unit in allUnits)
+        {
             unit.Move();
+        }
+
+        if (turn == 0)
+        {
+            turnManager.EndTurn();
+        }
+        else
+        {
+            turnOrchestrator.OrchestrateAfterEncounters(turn == 0 ? 1 : turn);
         }
     }
 
@@ -302,23 +341,33 @@ public class MatchManager : MonoBehaviour
         node.AddOccupant(unit);
     }
 
-    public void MoveWinner(BuildingNode node, List<UnitManager> winners, List<UnitManager> losers)
+    // TODO
+    // Will be called as each encounter resolves to set target node for winners 
+    // and resolve any issues with losers
+    public void MoveWinner(BuildingNode node, int winners, List<int> losers)
     {
-        if (winners[0].TeamID == 0)
+        List<UnitManager> unitsToBeDead = new List<UnitManager>();
+
+        if (winners == 0)
         {
             deploymentPositionsInformation.HideAt(node);
         }
 
-        foreach (UnitManager unit in losers)
+        for (int i = allUnits.Count - 1; i >= 0; i--)
         {
-            unit.Die();
+            if (losers.Contains(allUnits[i].TeamID))
+            {
+                unitsToBeDead.Add(allUnits[i]);
+            }
         }
 
-        foreach (UnitManager unit in winners)
+        while (unitsToBeDead.Count != 0)
         {
-            unit.Move(node);
+            unitsToBeDead[0].Die();
+            unitsToBeDead.RemoveAt(0);
         }
     }
+
     private void HandleDeath(UnitManager unit)
     {
         aliveUnits[unit.TeamID]--;

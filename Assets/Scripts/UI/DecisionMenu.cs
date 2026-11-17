@@ -63,6 +63,11 @@ public class DecisionMenu : MonoBehaviour
     {
         if (nodePreview.IsPreviewed && /* !(nodePreview.Node.OccupyingUnits.Count > 0) && */ !nodePreview.IsOriginal)
         {
+            if (nodePreview.Node.OccupyingUnits.Count > 0 && nodePreview.Node.OccupyingUnits[0].TeamID == 0)
+            {
+                return;
+            }
+            
             OpenDecisionMenu(nodePreview);
         }
     }
